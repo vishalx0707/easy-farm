@@ -3,7 +3,7 @@
 const {generateKeyPairSync,sign,randomUUID}=require('node:crypto');
 const fs=require('node:fs/promises');
 const domain=require('../marketplace-domain.cjs');
-module.exports=async function start(){
+module.exports=async function start(options={}){
  const {createClerkClient}=await import('@clerk/backend');const {createAuth}=await import('../auth.mjs');const {handleMarketplace}=await import('../marketplace-service.mjs');
  const {privateKey,publicKey}=generateKeyPairSync('rsa',{modulusLength:2048});
  const host='test-fixture.clerk.accounts.dev',pk='pk_test_'+Buffer.from(host+'$').toString('base64').replace(/=+$/,'');
@@ -17,7 +17,7 @@ module.exports=async function start(){
   const request=new Request(base+req.url,{method:req.method,headers:req.headers,...(!['GET','HEAD'].includes(req.method)?{body:raw}:{})});
   try{const result=await handleMarketplace(request,{auth,store});result.headers.forEach((v,k)=>res.setHeader(k,v));res.writeHead(result.status).end(Buffer.from(await result.arrayBuffer()));}
   catch{res.writeHead(500).end();}
- });
+ },options.reactFixtures?{staticRoot:require('node:path').resolve('.easyfarm-react-test/dist')}:{});
  let base;await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));base='http://127.0.0.1:'+server.address().port;
  function tokenFor(person,claims={}){
   const id=person.id||'user_'+randomUUID(),sid='sess_'+randomUUID();person.id=id;

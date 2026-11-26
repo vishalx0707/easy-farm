@@ -7,22 +7,56 @@
     "dev:cloudflare": "node tools/dev-secret.cjs && npm run build && wrangler dev --port 8787 --persist-to .wrangler/local",
     "check:cloudflare": "npm run build && wrangler deploy --dry-run",
     "deploy": "npm run build && wrangler deploy",
-    "test:browser": "node tools/verify.cjs",
+    "test:browser": "node tools/build.cjs --fixtures && node tools/verify.cjs",
     "test:auth": "node tools/verify-clerk.cjs",
-    "test:worker": "npm run build && wrangler deploy --dry-run --outdir .wrangler/test-bundle && node tools/verify-worker.cjs"
+    "test:worker": "npm run build && wrangler deploy --dry-run --outdir .wrangler/test-bundle && node tools/verify-worker.cjs",
+    "prestart": "npm run build",
+    "dev": "vite",
+    "typecheck": "tsc --noEmit"
   },
   "engines": {
     "node": ">=24"
   },
   "dependencies": {
     "@clerk/backend": "^3.33.1",
-    "qrcode": "^1.5.4"
+    "@clerk/react": "^6.19.7",
+    "@clerk/ui": "^1.46.0",
+    "@gsap/react": "^2.1.2",
+    "@hookform/resolvers": "^7.0.9",
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.2",
+    "@tailwindcss/vite": "^4.3.5",
+    "@tanstack/react-query": "^5.108.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "gsap": "^3.15.1",
+    "lenis": "^1.3.29",
+    "lucide-react": "^1.81.0",
+    "qrcode": "^1.5.4",
+    "radix-ui": "^1.8.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-hook-form": "^7.92.0",
+    "react-router-dom": "^7.18.7",
+    "tailwind-merge": "^3.7.1",
+    "tailwindcss": "^4.3.5",
+    "three": "^0.187.0",
+    "tw-animate-css": "^1.4.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@types/node": "^26.6.11",
+    "@types/react": "^19.3.3",
+    "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.187.0",
+    "@vitejs/plugin-react": "^6.3.0",
     "jsqr": "^1.4.0",
     "miniflare": "^5.20261123.1-beta",
     "playwright": "^1.65.1",
     "pngjs": "^7.0.0",
+    "prettier": "^3.10.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.4.0",
     "wrangler": "^4.168.0"
   }
 }

@@ -1,0 +1,732 @@
+@media (min-width: 761px) and (max-height: 760px) {
+  .app-sidebar {
+    padding-top: 20px;
+  }
+  .app-sidebar > .brand {
+    margin-bottom: 22px;
+  }
+  #app-nav {
+    gap: 2px;
+  }
+  #app-nav > button {
+    min-height: 38px;
+  }
+  .nav-divider {
+    margin: 7px 9px;
+  }
+  .sidebar-bottom {
+    gap: 7px;
+    padding-top: 16px;
+  }
+  .overview-hero {
+    padding: 28px;
+  }
+  .overview-cards {
+    padding-top: 18px;
+  }
+  .lot-record .facts > div {
+    padding: 7px 0;
+  }
+  .harvest-spotlight > div {
+    padding-top: 21px;
+    padding-bottom: 21px;
+  }
+}
+@media (max-width: 1100px) and (min-width: 761px) {
+  .app-shell {
+    grid-template-columns: 180px minmax(0, 1fr);
+  }
+  .app-sidebar {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .view-content {
+    padding: 24px;
+  }
+  .overview-hero {
+    padding: 30px 25px;
+  }
+  .harvest-spotlight > img {
+    width: 85px;
+  }
+  .harvest-spotlight h3 {
+    font-size: 22px;
+  }
+  .lot-record {
+    width: 240px;
+  }
+  .overview-bottom > button {
+    display: none;
+  }
+  .records > article {
+    gap: 12px;
+    padding: 18px;
+  }
+  .record-icon {
+    display: none;
+  }
+  .records > article {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+  .order-layout {
+    grid-template-columns: 1fr;
+  }
+  .trace-panel {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 0 20px;
+  }
+  .trace-panel .event-list {
+    grid-column: 2;
+    grid-row: 2/7;
+  }
+  .trace-panel > h3 {
+    display: none;
+  }
+  .trace-panel .simulation-note {
+    grid-column: 1/-1;
+  }
+  .account-copy strong {
+    max-width: 96px;
+  }
+}
+@media (max-width: 760px) {
+  .trade-dialog,
+  .filter-dialog,
+  .account-dialog {
+    top: calc(var(--app-height, 100dvh) / 2);
+  }
+  .app-shell {
+    display: flex;
+    flex-direction: column;
+    background-position: 63% center;
+  }
+  .app-sidebar {
+    display: none;
+  }
+  .workspace {
+    flex: 1;
+  }
+  .workspace-bar {
+    min-height: 112px;
+    padding: 14px 18px 12px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    background: #2e3e26c2;
+  }
+  .workspace-bar > .mobile-brand {
+    display: block;
+  }
+  .workspace-bar .brand {
+    font-size: 22px;
+  }
+  .workspace-title {
+    grid-row: 2;
+    grid-column: 1;
+  }
+  .workspace-title h1 {
+    font-size: 17px;
+  }
+  .workspace-title > span {
+    display: none;
+  }
+  .workspace-presence {
+    display: none;
+  }
+  .mobile-tools {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    grid-row: 2;
+    grid-column: 2;
+  }
+  .mobile-tools > .account-button {
+    min-height: 39px;
+    width: auto;
+    padding: 4px 9px 4px 4px;
+    border-radius: 20px;
+    gap: 7px;
+  }
+  .mobile-tools .avatar {
+    width: 26px;
+    height: 26px;
+    font-size: 10px;
+  }
+  .mobile-tools .account-copy strong {
+    display: none;
+  }
+  .mobile-tools .account-copy small {
+    font-size: 9px;
+    margin: 0;
+    white-space: nowrap;
+    color: #d9e5c9;
+  }
+  .mobile-tools > button {
+    min-width: 34px;
+    min-height: 40px;
+    width: 34px;
+  }
+  .workspace-scroll {
+    overscroll-behavior-y: contain;
+  }
+  .view-content {
+    padding: 21px 18px 30px;
+  }
+  .view-home {
+    min-height: calc(
+      var(--app-height, 100dvh) - 184px - env(safe-area-inset-bottom)
+    );
+  }
+  .overview-hero {
+    min-height: calc(
+      var(--app-height, 100dvh) - 184px - env(safe-area-inset-bottom)
+    );
+    padding: 27px 18px 23px;
+    gap: 23px;
+  }
+  .overview-intro h2 {
+    font-size: 32px;
+    letter-spacing: -1.2px;
+    max-width: 340px;
+  }
+  .overview-intro .eyebrow {
+    font-size: 8px;
+    letter-spacing: 0.75px;
+    margin-bottom: 12px;
+  }
+  .overview-intro > p:last-child {
+    font-size: 12px;
+    max-width: 30ch;
+    line-height: 1.8;
+    margin-top: 11px;
+  }
+  .overview-cards {
+    flex-direction: column;
+    padding: 0;
+    margin: 0;
+    gap: 12px;
+    max-width: 100%;
+  }
+  .harvest-spotlight {
+    max-width: 100%;
+    min-height: 166px;
+    border-radius: 17px;
+  }
+  .harvest-spotlight > img {
+    width: 96px;
+  }
+  .harvest-spotlight > div {
+    padding: 21px 12px 21px 10px;
+  }
+  .harvest-spotlight h3 {
+    font-size: 24px;
+    margin: 10px 0;
+    max-width: 14ch;
+  }
+  .harvest-spotlight .eyebrow {
+    font-size: 8px;
+    letter-spacing: 0.6px;
+  }
+  .harvest-spotlight p:not(.eyebrow) {
+    font-size: 10px;
+  }
+  .harvest-spotlight button {
+    margin-top: 20px;
+    font-size: 11px;
+    min-height: 43px;
+  }
+  .lot-record {
+    width: 100%;
+    padding: 19px;
+    border-radius: 17px;
+  }
+  .lot-record h3 {
+    font-size: 14px;
+  }
+  .lot-record .facts {
+    margin: 10px 0 2px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 17px;
+  }
+  .lot-record .facts > div {
+    font-size: 9px;
+    padding: 8px 0;
+    gap: 9px;
+  }
+  .lot-record .facts > div:first-child {
+    grid-column: 1/-1;
+  }
+  .lot-record .facts dt {
+    flex: 1;
+  }
+  .lot-record .facts dd {
+    flex: 1.4;
+  }
+  .lot-record button {
+    display: inline-block;
+    margin-right: 22px;
+    font-size: 10px;
+  }
+  .lot-record > p {
+    font-size: 11px;
+    margin: 15px 0 8px;
+  }
+  .overview-bottom {
+    display: block;
+  }
+  .grower-caption {
+    width: 100%;
+    gap: 9px;
+  }
+  .grower-caption strong {
+    font-size: 11px;
+  }
+  .grower-caption small {
+    font-size: 9px;
+    max-width: 180px;
+    line-height: 1.5;
+  }
+  .profile-label {
+    margin-left: auto;
+    font-size: 9px;
+    padding: 9px 6px;
+    white-space: nowrap;
+  }
+  .overview-bottom > button {
+    margin-top: 15px;
+    font-size: 9px;
+  }
+  .mobile-nav {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+    padding: 7px 8px calc(8px + env(safe-area-inset-bottom));
+    background: linear-gradient(#f3f5e6f2, #eef1e0fa);
+    border-top: 1px solid #ffffffb0;
+    backdrop-filter: blur(25px);
+    box-shadow: 0 -8px 30px #16250c12;
+    z-index: 20;
+  }
+  .mobile-nav > button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 53px;
+    padding: 5px 2px;
+    background: none;
+    border: 0;
+    color: #7c8c67;
+    border-radius: 13px;
+    font-size: 9px;
+    font-weight: 450;
+  }
+  .mobile-nav > button > svg {
+    box-sizing: content-box;
+    padding: 3px 8px;
+    border-radius: 9px;
+    height: 20px;
+    width: 20px;
+    stroke-width: 1.5;
+  }
+  .mobile-nav > button[aria-current="page"] {
+    color: #385024;
+  }
+  .mobile-nav > button[aria-current="page"] > svg {
+    background: #d8e8be;
+  }
+  .section-row {
+    margin: 4px 0 22px;
+    gap: 13px;
+    align-items: flex-start;
+  }
+  .section-row h2 {
+    font-size: 26px;
+    letter-spacing: -0.9px;
+  }
+  .section-row p {
+    font-size: 11px;
+    margin-top: 8px;
+    max-width: 32ch;
+  }
+  .section-row > button {
+    font-size: 10px;
+    padding: 8px 10px;
+    min-height: 40px;
+  }
+  .catalogue-toolbar {
+    gap: 8px;
+    margin: 20px 0 15px;
+  }
+  .catalogue-toolbar > button {
+    font-size: 10px;
+    min-height: 44px;
+    padding: 9px 12px;
+  }
+  .search-field input {
+    font-size: 12px;
+  }
+  .category-tabs {
+    margin-right: -18px;
+    padding-right: 18px;
+    gap: 6px;
+  }
+  .category-tabs button {
+    min-height: 35px;
+    font-size: 9px;
+    padding: 7px 12px;
+  }
+  .results-count {
+    font-size: 9px;
+    margin: 13px 0;
+  }
+  .results-count > span {
+    font-size: 8px;
+  }
+  .lot-grid,
+  .farm-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .lot-image {
+    height: 168px;
+  }
+  .lot-copy {
+    padding: 17px;
+  }
+  .lot-title h3 {
+    font-size: 21px;
+  }
+  .lot-title > strong {
+    font-size: 24px;
+  }
+  .lot-bottom button {
+    min-height: 38px;
+    font-size: 10px;
+  }
+  .lot-card:hover {
+    transform: none;
+  }
+  .empty-state {
+    padding: 32px 22px;
+    margin: 15px 0;
+  }
+  .empty-state h3 {
+    font-size: 23px;
+  }
+  .empty-state p {
+    font-size: 12px;
+  }
+  .empty-state button {
+    min-height: 43px;
+    font-size: 11px;
+  }
+  .records > article {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 13px;
+    padding: 18px;
+  }
+  .record-icon {
+    display: none;
+  }
+  .records > article > button {
+    grid-column: 1/-1;
+    justify-self: stretch;
+    min-height: 40px;
+    margin-top: 3px;
+  }
+  .records h3 {
+    font-size: 18px;
+  }
+  .records p {
+    font-size: 10px;
+  }
+  .record-price > strong {
+    font-size: 22px;
+  }
+  .record-price > span {
+    font-size: 9px;
+  }
+  .record-price > [data-slot="badge"] {
+    font-size: 8px;
+    max-width: 140px;
+    white-space: normal;
+    text-align: right;
+  }
+  .records article small {
+    font-size: 9px;
+  }
+  .message-preview {
+    max-width: 23ch;
+  }
+  .sort-label {
+    font-size: 8px;
+  }
+  .sort-label select {
+    font-size: 10px;
+    min-height: 38px;
+    width: 119px;
+    padding: 8px;
+  }
+  .detail-layout,
+  .trade-detail-grid,
+  .market-layout,
+  .order-layout {
+    grid-template-columns: 1fr;
+    gap: 17px;
+  }
+  .detail-visual > img {
+    height: 210px;
+  }
+  .detail-visual > p {
+    font-size: 8px;
+  }
+  .panel {
+    padding: 21px;
+    border-radius: 16px;
+  }
+  .panel h2,
+  .cream-panel h2 {
+    font-size: 25px;
+  }
+  .facts > div {
+    font-size: 11px;
+    gap: 17px;
+    padding: 11px 0;
+  }
+  .facts dt {
+    flex: 1;
+  }
+  .facts dd {
+    flex: 1.4;
+  }
+  .actions {
+    gap: 8px;
+    margin-top: 19px;
+  }
+  .actions button {
+    min-height: 43px;
+    font-size: 10px;
+    padding: 9px 12px;
+  }
+  .price-large {
+    font-size: 38px;
+  }
+  .thread-title h2 {
+    font-size: 19px;
+  }
+  .messages {
+    height: 280px;
+    max-height: 45vh;
+    min-height: 160px;
+  }
+  .message {
+    max-width: 93%;
+    padding: 11px 13px;
+  }
+  .message p {
+    font-size: 12px;
+  }
+  .message small {
+    font-size: 8px;
+  }
+  #message-form input {
+    font-size: 16px;
+    min-height: 46px;
+  }
+  #message-form button {
+    min-height: 46px;
+  }
+  .timeline {
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin: 25px 0 15px;
+  }
+  .timeline li {
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+    border: 0;
+    border-left: 1px solid #c6dba73b;
+    padding: 0 0 22px 17px;
+    margin-left: 12px;
+    min-height: 50px;
+  }
+  .timeline li:last-child {
+    border-left: 0;
+    padding-bottom: 0;
+  }
+  .timeline li > span {
+    width: 23px;
+    height: 23px;
+    position: relative;
+    left: -29px;
+    margin: 0 -23px 0 0;
+    flex-shrink: 0;
+    background: #2b4122;
+  }
+  .timeline li strong {
+    font-size: 11px;
+    min-height: 0;
+    margin: 3px 0 3px;
+  }
+  .timeline li small {
+    font-size: 9px;
+  }
+  .order-summary {
+    gap: 9px;
+  }
+  .order-summary > span {
+    font-size: 10px;
+  }
+  .order-summary > strong {
+    font-size: 31px;
+  }
+  .order-summary > [data-slot="badge"] {
+    font-size: 8px;
+    margin-left: 0;
+  }
+  .cream-panel {
+    padding: 22px;
+    border-radius: 16px;
+  }
+  .qr-wrap {
+    margin: 19px auto 15px;
+  }
+  .trace-panel > a {
+    display: block;
+    text-align: center;
+    font-size: 12px;
+    min-height: 36px;
+  }
+  .trace-hint {
+    text-align: center;
+  }
+  .trace-panel > h3 {
+    margin-top: 23px;
+  }
+  .event-list small {
+    font-size: 10px;
+  }
+  .event-list strong {
+    font-size: 12px;
+  }
+  .simulation-note {
+    font-size: 9px !important;
+  }
+  .farm-profile {
+    grid-template-columns: 1fr;
+  }
+  .farm-profile > img {
+    height: 190px;
+  }
+  .farm-profile > div {
+    padding: 23px;
+  }
+  .farm-profile h2 {
+    font-size: 29px;
+  }
+  .farm-profile p:not(.eyebrow) {
+    font-size: 12px;
+  }
+  .farm-card > img {
+    height: 165px;
+  }
+  .chart-top h2 {
+    font-size: 40px;
+  }
+  .chart-top select {
+    max-width: 130px;
+    font-size: 10px;
+  }
+  .trade-dialog,
+  .filter-dialog,
+  .account-dialog {
+    width: calc(100% - 28px);
+    max-width: calc(100% - 28px);
+    padding: 23px 19px;
+    max-height: calc(var(--app-height, 100dvh) - 28px);
+    gap: 15px;
+  }
+  .trade-dialog [data-slot="dialog-title"] {
+    font-size: 25px;
+  }
+  .fields {
+    gap: 15px 11px;
+  }
+  .fields label {
+    font-size: 10px;
+  }
+  .fields input,
+  .fields select,
+  .fields textarea {
+    font-size: 16px;
+    min-height: 46px;
+    padding: 10px;
+  }
+  .dialog-actions {
+    margin-top: 22px;
+  }
+  .dialog-actions > button {
+    min-height: 44px;
+    font-size: 11px;
+  }
+  .toast {
+    bottom: calc(85px + env(safe-area-inset-bottom));
+    font-size: 11px;
+    padding: 12px 14px;
+    width: max-content;
+  }
+  .trace-page {
+    padding: 22px 18px;
+  }
+  .trace-page > header {
+    gap: 15px;
+    margin-bottom: 25px;
+  }
+  .trace-page .brand {
+    font-size: 21px;
+  }
+  .trace-page > header > a:not(.brand) {
+    font-size: 9px;
+    max-width: 100px;
+    text-align: right;
+  }
+}
+@media (max-width: 760px) {
+  .search-field input {
+    font-size: 16px;
+  }
+  .mobile-tools > .account-button {
+    min-height: 44px;
+  }
+  .mobile-tools > button {
+    min-width: 38px;
+    min-height: 44px;
+  }
+}
+.mobile-farm {
+  display: none;
+}
+@media (max-width: 760px) {
+  .mobile-farm {
+    display: block;
+    grid-row: 1;
+    grid-column: 2;
+    justify-self: end;
+    max-width: 150px;
+  }
+  .mobile-farm select {
+    width: 100%;
+    max-width: 150px;
+    font-size: 11px;
+    min-height: 36px;
+    padding: 7px 8px;
+    background: #c4dba316;
+  }
+}

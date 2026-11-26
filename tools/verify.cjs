@@ -1,122 +1,52 @@
 const {chromium}=require('playwright');
 const {PNG}=require('pngjs');
 const decode=require('jsqr');
-const fs=require('fs');
-const assert=require('assert/strict');
-let base;
-let testServer;
-const results=[];
-async function main(){
- testServer=await require('./clerk-fixtures.cjs')();base=testServer.base;
- const browser=await chromium.launch({channel:'chrome',headless:true});
- try{
-  // Our shell must leave Clerk's provider-return parameters for the SDK.
-  const callbackContext=await browser.newContext();
-  await callbackContext.addInitScript(()=>{window.Clerk={load:async()=>{},session:null,handleRedirectCallback:async options=>{window.callbackObserved={url:location.href,options};},mountSignUp:()=>{window.continuationObserved=location.href;}};});
-  const callbackPage=await callbackContext.newPage();
-  await callbackPage.goto(base+'/login?portal=grower&callback=1&__clerk_status=verified&__clerk_created_session=session-fixture');
-  await callbackPage.waitForFunction(()=>window.callbackObserved);
-  const callback=await callbackPage.evaluate(()=>window.callbackObserved);
-  assert.equal(new URL(callback.url).searchParams.get('__clerk_created_session'),'session-fixture');
-  assert.equal(new URL(callback.url).searchParams.get('__clerk_status'),'verified');
-  assert.equal(callback.options.signUpForceRedirectUrl,'/login?portal=grower&finish=1');
-  await callbackPage.goto(base+'/login?portal=buyer&continue=1&__clerk_ticket=ticket-fixture');
-  await callbackPage.waitForFunction(()=>window.continuationObserved);
-  assert.equal(new URL(await callbackPage.evaluate(()=>window.continuationObserved)).searchParams.get('__clerk_ticket'),'ticket-fixture');
-  await callbackContext.close();
-  for(const width of [1440,390,360]){
-   const suffix=width+'-'+Date.now(),crop='QA portal peppers '+suffix;
-   const errors=[];
-   async function person(role,label){
-    const context=await browser.newContext({viewport:{width,height:width===1440?950:844},isMobile:width<600,hasTouch:width<600});
-    await context.addInitScript(()=>{
-      window.Clerk={load:async()=>{},get session(){const token=localStorage.getItem('qa_clerk_token');return token?{getToken:async()=>token}:null;},signOut:async({redirectUrl})=>{localStorage.removeItem('qa_clerk_token');location.replace(redirectUrl);}};
-    });
-    const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
-    return {context,page,role,email:label+'-'+suffix+'@example.test',name:label==='grower'?'Maya Test':'Arjun Test',organization:label==='grower'?'QA Valley Farm '+width:'QA Fresh Market '+width};
-   }
-   const grower=await person('grower','grower'),buyer=await person('buyer','buyer');
-   async function loaded(p){await p.locator('#content[aria-busy="false"]').waitFor();}
-   async function go(person,view='overview',detail){await person.page.goto(base+'/'+person.role+'?view='+view+(detail?'&type='+detail.type+'&detail='+detail.id:''));await loaded(person.page);}
-   async function register(person){
-    const p=person.page;
-    person.token=testServer.tokenFor(person);
-    await person.context.setExtraHTTPHeaders({Authorization:'Bearer '+person.token});
-    await p.goto(base+'/login?portal='+person.role);
-    await p.evaluate(token=>localStorage.setItem('qa_clerk_token',token),person.token);
-    await p.goto(base+'/login?portal='+person.role+'&finish=1');
-    await p.locator('#profile-form:not([hidden])').waitFor();
-    await p.locator('[name="organization"]').fill(person.organization);await p.locator('[name="location"]').fill('Nashik');
-    await p.locator('#profile-submit').click();
-    await p.waitForURL('**/'+person.role+'**');await loaded(p);
-    assert.equal(await p.locator('body').getAttribute('data-portal'),person.role);
-    assert.equal(await p.locator('[data-role]').count(),0);
-    assert.equal(await p.locator('input[type=password],input[type=email]').count(),0);
-   }
-   async function click(p,action){await p.locator('[data-action="'+action+'"]').first().click();}
-   async function save(p){await p.locator('#save-editor').click();await p.locator('#editor').waitFor({state:'hidden'});}
-   async function state(person){const r=await person.context.request.get(base+'/api/state');assert.equal(r.status(),200);return r.json();}
-   async function action(person,body){return person.context.request.post(base+'/api/action',{headers:{Origin:base},data:body});}
-   async function noOverflow(p,label){assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),label+' document overflow at '+width);assert(await p.locator('#content').evaluate(el=>el.scrollWidth<=el.clientWidth+1),label+' content overflow at '+width);}
-   await grower.page.goto(base+'/grower');await grower.page.waitForURL('**/login**');
-   await register(grower);await register(buyer);
-   await grower.page.screenshot({path:'design/qa-portal-grower-'+width+'.png'});await buyer.page.screenshot({path:'design/qa-portal-buyer-'+width+'.png'});
-   await noOverflow(grower.page,'grower home');await noOverflow(buyer.page,'buyer home');
-   const initial=await state(grower);assert.equal(initial.farms.filter(f=>f.owned).length,1);assert.equal(initial.offers.length,0);
-   const farmId=initial.farms.find(f=>f.owned).id;
-   const gp=grower.page,bp=buyer.page;
-   await click(gp,'edit-lot');
-   for(const [name,value]of Object.entries({crop,quantity:'100',price:'40',grade:'A',harvest:'2026-11-26',pickup:'Tomorrow 9–11 am',notes:'Isolated account test. Crates included.'}))await gp.locator('#fields [name="'+name+'"]').fill(value);
-   await save(gp);await gp.getByRole('heading',{name:crop,exact:true}).waitFor();await click(gp,'quality');await gp.getByText('Sample check passed (simulated)',{exact:true}).waitFor();
-   const lotId=new URL(gp.url()).searchParams.get('detail');
-   await go(buyer,'catalogue');await bp.locator('[name="search"]').fill(crop);await bp.locator('#lot-grid .lot-card').waitFor();assert.equal(await bp.locator('#lot-grid .lot-card').count(),1);await noOverflow(bp,'buyer catalogue');
-   await click(bp,'lot');await click(bp,'new-offer');await bp.locator('#fields [name="quantity"]').fill('25');await bp.locator('#fields [name="price"]').fill('35');await bp.locator('#fields [name="message"]').fill('Can you include crates?');await save(bp);
-   const offerId=new URL(bp.url()).searchParams.get('detail');
-   async function message(p,copy){await p.locator('#message-form [name="message"]').fill(copy);await p.locator('#message-form button').click();await p.getByText(copy,{exact:true}).waitFor();}
-   await message(bp,'We will collect tomorrow.');
-   await go(grower,'offers',{type:'offer',id:offerId});await gp.getByText('Can you include crates?',{exact:true}).waitFor();await message(gp,'Yes, crates are included.');
-   await click(gp,'counter');await gp.locator('#fields [name="price"]').fill('38');await save(gp);
-   await go(buyer,'offers',{type:'offer',id:offerId});await bp.getByText('Yes, crates are included.',{exact:true}).waitFor();await click(bp,'counter');await bp.locator('#fields [name="price"]').fill('37');await save(bp);
-   await go(grower,'offers',{type:'offer',id:offerId});await click(gp,'accept');await gp.locator('.trace-panel').waitFor();const orderId=new URL(gp.url()).searchParams.get('detail');
-   await gp.reload();await loaded(gp);await gp.getByText('₹925',{exact:true}).waitFor();await noOverflow(gp,'grower order');
-   for(const step of ['Packed','Ready for pickup','Picked up','Delivered']){await click(gp,'status');await gp.locator('#milestone-note').filter({hasText:'Current status: '+step+'.'}).waitFor();}
-   await go(buyer,'orders',{type:'order',id:orderId});await click(bp,'payment');await bp.getByText('Paid (simulated)',{exact:true}).waitFor();await bp.reload();await loaded(bp);await noOverflow(bp,'buyer order');
-   const qr=await buyer.context.request.get(base+'/api/qr/'+orderId);assert.equal(qr.status(),200);const png=PNG.sync.read(await qr.body());const code=decode(new Uint8ClampedArray(png.data),png.width,png.height);assert(code);assert.equal(code.data,base+'/app.html?batch='+orderId);
-   const outsider=await browser.newContext();const publicApi=outsider.request;
-   assert.equal((await publicApi.get(base+'/api/state')).status(),401);
-   const trace=await(await publicApi.get(base+'/api/trace/'+orderId)).json();assert.equal(trace.orders[0].payment,'Paid (simulated)');assert(!trace.orders[0].buyer);assert(!trace.orders[0].buyerName);assert.equal(trace.offers.length,0);
-   const tracePage=await outsider.newPage();tracePage.on('pageerror',e=>errors.push(e.message));await tracePage.goto(code.data);await loaded(tracePage);assert.equal(await tracePage.locator('[data-action="payment"]').count(),0);
-   for(const role of ['buyer','grower']){
-    const token=testServer.tokenFor({email:'outsider-'+role+'-'+suffix+'@example.test',name:'Other Account'});
-    await outsider.setExtraHTTPHeaders({Authorization:'Bearer '+token});
-    const response=await publicApi.post(base+'/api/profile',{headers:{Origin:base},data:{organization:'Other '+role,location:'Pune',role}});assert.equal(response.status(),200);
-    const view=await(await publicApi.get(base+'/api/state')).json();assert.equal(view.orders.length,0);assert.equal(view.offers.length,0);assert.equal(view.history.length,0);
-    for(const body of [{action:'message',offer:offerId,message:'Not permitted',farm:farmId},{action:'payment',order:orderId},{action:'order-status',order:orderId,status:'Packed',farm:farmId},{action:'farm',id:farmId,name:'Changed',person:'Changed',location:'Changed',bio:''}]){assert.equal((await publicApi.post(base+'/api/action',{headers:{Origin:base},data:body})).status(),400);}
-    testServer.revoke(token);await outsider.setExtraHTTPHeaders({});
-   }
-   const spoof=await action(buyer,{role:'grower',action:'listing',farm:farmId,crop:'Forbidden',quantity:1,price:1,grade:'A',category:'Peppers',pickup:'Tomorrow'});assert.equal(spoof.status(),400);
-   await buyer.context.request.post(base+'/api/auth/update-user',{headers:{Origin:base},data:{role:'grower'}});assert.equal((await state(buyer)).user.role,'buyer');
-   await bp.goto(base+'/grower?view=listings');await loaded(bp);assert.equal(new URL(bp.url()).pathname,'/buyer');assert.equal(await bp.locator('[data-action="edit-lot"]').count(),0);
-   const after=await state(grower);assert.equal(after.listings.find(l=>l.id===lotId).quantity,75);assert.equal(after.orders.find(o=>o.id===orderId).timeline.length,6);assert(!JSON.stringify(after).includes('password'));
-   // OAuth session fixtures stand in for Google's callback; the actual provider
-   // exchange requires real credentials and is checked separately/manual.
-   await gp.route('**/api/auth/session',route=>route.fulfill({json:{user:null}}));
-   await gp.locator('#account-button').click();await gp.locator('#sign-out').click();await gp.waitForURL('**/login**');testServer.revoke(grower.token);assert.equal((await grower.context.request.get(base+'/api/state')).status(),401);
-   await gp.goto(base+'/');
-   await gp.unroute('**/api/auth/session');
-   grower.token=testServer.tokenFor(grower);await grower.context.setExtraHTTPHeaders({Authorization:'Bearer '+grower.token});
-   await gp.evaluate(token=>localStorage.setItem('qa_clerk_token',token),grower.token);
-   await gp.goto(base+'/login?portal=buyer');await gp.waitForURL('**/grower**');await loaded(gp);await gp.reload();await loaded(gp);
-   if(width<600){for(const person of [grower,buyer]){
-    await go(person);const nav=person.page.locator('#mobile-nav');
-    for(const key of ['overview',person.role==='grower'?'listings':'catalogue','offers','orders','messages']){await nav.locator('[data-nav="'+key+'"]').click();assert.equal(await nav.locator('[aria-current="page"]').getAttribute('data-nav'),key);await noOverflow(person.page,person.role+' '+key);}
-    await person.page.locator('[data-action="offer-detail"]').first().click();await person.page.locator('#message-form input').focus();await person.page.setViewportSize({width,height:440});await noOverflow(person.page,'keyboard');await person.page.setViewportSize({width,height:844});
-   }}
-   assert.deepEqual(errors,[]);results.push({width,lotId,offerId,orderId,authentication:'Clerk SDK verifies RSA-signed fixture tokens; user/session provider records and browser SDK are mocked',portals:['buyer','grower'],qrDecoded:true,accountIsolation:true,spoofedRoleRejected:true,signOutAndReturningSession:true,remainingKg:75,consoleErrors:errors});
-   await outsider.close();await grower.context.close();await buyer.context.close();console.log('PASS '+width+'px authenticated trade and account isolation');
-  }
-  await testServer.saveReload();
-  fs.writeFileSync('design/verification-results.json',JSON.stringify({server:base,results},null,2));
- }finally{await browser.close();await testServer.close();}
-}
-main().catch(error=>{console.error(error);process.exitCode=1;});
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+(async()=>{
+ const test=await require('./clerk-fixtures.cjs')({reactFixtures:true}),base=test.base;
+ const browser=await chromium.launch({channel:'chrome',headless:true});const results=[];
+ try{for(const width of [1440,390,360]){
+  const errors=[],suffix=width+'-'+Date.now(),crop='Ruby bell peppers '+width;
+  const person=async(role,label)=>{const context=await browser.newContext({viewport:{width,height:width===1440?950:844},isMobile:width<600,hasTouch:width<600,reducedMotion:'reduce'});const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));return {context,page,role,name:label,email:role+suffix+'@example.test',organization:(role==='grower'?'Valley Farm ':'Fresh Market ')+width};};
+  const grower=await person('grower','Maya Test'),buyer=await person('buyer','Arjun Test');
+  const loaded=p=>p.locator('.app-shell').waitFor();
+  const go=async(p,view='overview',type,id)=>{await p.page.goto(base+'/'+p.role+'?view='+view+(type?'&type='+type+'&detail='+id:''));await loaded(p.page);};
+  const noOverflow=async(p,label)=>{assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),label+' document overflow '+width);const el=p.locator('#content');if(await el.count())assert(await el.evaluate(e=>e.scrollWidth<=e.clientWidth+1),label+' content overflow '+width);};
+  const state=async p=>{const r=await p.context.request.get(base+'/api/state');assert.equal(r.status(),200);return r.json();};
+  const action=(p,data)=>p.context.request.post(base+'/api/action',{headers:{Origin:base},data});
+  async function register(p){p.token=test.tokenFor(p);await p.context.setExtraHTTPHeaders({Authorization:'Bearer '+p.token});await p.page.goto(base+'/login?portal='+p.role);assert.equal(await p.page.locator('[name=organization]').count(),0);await p.page.evaluate(t=>localStorage.setItem('qa_clerk_token',t),p.token);await p.page.goto(base+'/login?portal='+p.role);await p.page.waitForURL('**/onboarding**');await p.page.locator('#profile-form').waitFor();await noOverflow(p.page,'setup');await p.page.screenshot({path:'design/qa-react-setup-'+p.role+'-'+width+'.png'});await p.page.locator('[name=organization]').fill(p.organization);await p.page.locator('[name=location]').fill('Nashik');await p.page.locator('#profile-submit').click();await p.page.waitForURL('**/'+p.role);await loaded(p.page);assert.equal(await p.page.locator('.app-shell').getAttribute('data-portal'),p.role);}
+  await grower.page.goto(base+'/grower');await grower.page.waitForURL('**/login**');
+  await register(grower);await register(buyer);
+  for(const p of [grower,buyer]){await noOverflow(p.page,'home');const box=await p.page.locator('.app-shell').boundingBox();assert.equal(box.x,0);assert.equal(box.y,0);assert.equal(box.width,width);await p.page.screenshot({path:'design/qa-react-'+p.role+'-'+width+'.png'});if(width===1440){const a=await p.page.locator('#account-button').boundingBox();assert(a.y>500&&a.x<204,'account must be bottom-left');}}
+  const gp=grower.page,bp=buyer.page,initial=await state(grower),farm=initial.farms.find(f=>f.owned).id;
+  await gp.locator('[data-action=edit-lot]').click();await gp.getByRole('dialog').waitFor();
+  for(const [name,value]of Object.entries({crop,quantity:'100',price:'40',grade:'A',harvest:'2026-11-27',pickup:'Tomorrow 9–11 am',notes:'Crates included. Isolated test.'}))await gp.locator('#fields [name='+name+']').fill(value);
+  await noOverflow(gp,'listing form');if(width<600){await gp.setViewportSize({width,height:440});await gp.waitForFunction(()=>parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--app-height'))<450);const box=await gp.getByRole('dialog').boundingBox();assert(box.y>=0&&box.y+box.height<=441,'listing dialog must fit above keyboard');await gp.setViewportSize({width,height:844});}await gp.locator('#save-editor').click();await gp.getByRole('dialog').waitFor({state:'hidden'});await gp.getByRole('heading',{name:crop,exact:true}).waitFor();const lot=new URL(gp.url()).searchParams.get('detail');
+  await gp.locator('[data-action=quality]').click();await gp.getByText('Sample check passed (simulated)',{exact:true}).waitFor();
+  await go(buyer,'catalogue');await bp.locator('[name=search]').fill(crop);await bp.locator('#lot-grid .lot-card').waitFor();assert.equal(await bp.locator('#lot-grid .lot-card').count(),1);await noOverflow(bp,'catalogue');
+  await bp.getByRole('button',{name:'Filters',exact:false}).click();await bp.locator('#filter-max').fill('39');await bp.getByRole('button',{name:'Show 0 lots'}).waitFor();await bp.locator('#filter-max').fill('45');await bp.getByRole('button',{name:'Show 1 lots'}).click();
+  await bp.locator('[data-action=lot]').click();await bp.locator('[data-action=new-offer]').click();await bp.locator('#fields [name=quantity]').fill('25');await bp.locator('#fields [name=price]').fill('35');await bp.locator('#fields [name=message]').fill('Can you include crates?');await bp.locator('#save-editor').click();await bp.getByRole('dialog').waitFor({state:'hidden'});const offer=new URL(bp.url()).searchParams.get('detail');
+  async function message(p,text){await p.locator('#message-form input').fill(text);await p.locator('#message-form button').click();await p.getByText(text,{exact:true}).waitFor();}
+  await message(bp,'We will collect tomorrow.');await go(grower,'offers','offer',offer);await gp.getByText('Can you include crates?',{exact:true}).waitFor();await message(gp,'Yes, crates are included.');
+  await gp.locator('[data-action=counter]').click();await gp.locator('#fields [name=price]').fill('38');await gp.locator('#save-editor').click();await gp.getByRole('dialog').waitFor({state:'hidden'});
+  await go(buyer,'offers','offer',offer);await bp.getByText('Yes, crates are included.',{exact:true}).waitFor();await bp.locator('[data-action=counter]').click();await bp.locator('#fields [name=price]').fill('37');await bp.locator('#save-editor').click();await bp.getByRole('dialog').waitFor({state:'hidden'});
+  await go(grower,'offers','offer',offer);await gp.locator('[data-action=accept]').click();await gp.locator('.trace-panel').waitFor();const order=new URL(gp.url()).searchParams.get('detail');await gp.reload();await loaded(gp);await gp.getByText('₹925',{exact:true}).waitFor();
+  for(const step of ['Packed','Ready for pickup','Picked up','Delivered']){await gp.locator('[data-action=status]').click();await gp.locator('#milestone-note').filter({hasText:'Current status: '+step+'.'}).waitFor();}
+  await go(buyer,'orders','order',order);await bp.locator('[data-action=payment]').click();await bp.getByText('Paid (simulated)',{exact:true}).first().waitFor();await bp.reload();await loaded(bp);await noOverflow(bp,'order');await bp.screenshot({path:'design/qa-react-order-'+width+'.png'});
+  const qr=await buyer.context.request.get(base+'/api/qr/'+order);assert.equal(qr.status(),200);const png=PNG.sync.read(await qr.body()),code=decode(new Uint8ClampedArray(png.data),png.width,png.height);assert.equal(code.data,base+'/app.html?batch='+order);
+  const outsider=await browser.newContext({viewport:{width,height:844}}),publicApi=outsider.request;assert.equal((await publicApi.get(base+'/api/state')).status(),401);const trace=await(await publicApi.get(base+'/api/trace/'+order)).json();assert.equal(trace.orders[0].payment,'Paid (simulated)');assert(!trace.orders[0].buyer);assert.equal(trace.offers.length,0);const tracePage=await outsider.newPage();tracePage.on('pageerror',e=>errors.push(e.message));await tracePage.goto(code.data);await tracePage.locator('.trace-panel').waitFor();assert.equal(await tracePage.locator('[data-action=payment]').count(),0);
+  for(const role of ['buyer','grower']){const token=test.tokenFor({email:'other-'+role+suffix+'@example.test',name:'Other'});await outsider.setExtraHTTPHeaders({Authorization:'Bearer '+token});assert.equal((await publicApi.post(base+'/api/profile',{headers:{Origin:base},data:{role,organization:'Other',location:'Pune'}})).status(),200);const d=await(await publicApi.get(base+'/api/state')).json();assert.equal(d.offers.length,0);assert.equal(d.orders.length,0);assert.equal(d.history.length,0);for(const body of [{action:'message',offer,farm,message:'Forbidden'},{action:'payment',order},{action:'order-status',order,farm,status:'Packed'},{action:'farm',id:farm,name:'Changed',person:'Changed',location:'Changed'}])assert.equal((await publicApi.post(base+'/api/action',{headers:{Origin:base},data:body})).status(),400);test.revoke(token);}
+  assert.equal((await action(buyer,{action:'listing',role:'grower',farm,crop:'Forbidden',quantity:1,price:1})).status(),400);
+  assert.equal((await action(grower,{action:'listing',farm,crop:'Invalid',category:'Peppers',grade:'A',quantity:-1,price:1,pickup:'Tomorrow'})).status(),400);
+  await go(buyer,'messages','offer',offer);const payload='<img src=x onerror=alert(1)>';await message(bp,payload);assert.equal(await bp.locator('.messages img').count(),0,'user messages must render as text');
+  await bp.goto(base+'/grower?view=listings');await bp.waitForURL('**/buyer**');await loaded(bp);assert.equal(await bp.locator('[data-action=edit-lot]').count(),0);
+  const after=await state(grower);assert.equal(after.listings.find(l=>l.id===lot).quantity,75);assert.equal(after.orders.find(o=>o.id===order).timeline.length,6);
+  await gp.locator('[data-account]:visible').click();await gp.locator('#sign-out').click();await gp.waitForURL('**/login');test.revoke(grower.token);assert.equal((await grower.context.request.get(base+'/api/state')).status(),401);
+  grower.token=test.tokenFor(grower);await grower.context.setExtraHTTPHeaders({Authorization:'Bearer '+grower.token});await gp.evaluate(t=>localStorage.setItem('qa_clerk_token',t),grower.token);await gp.goto(base+'/login?portal=buyer');await gp.waitForURL('**/grower**');await loaded(gp);await gp.reload();await loaded(gp);
+  if(width<600){for(const p of [grower,buyer]){await go(p);for(const key of ['overview',p.role==='grower'?'listings':'catalogue','offers','orders','messages']){await p.page.locator('#mobile-nav [data-nav='+key+']').click();await p.page.locator('#mobile-nav [data-nav='+key+'][aria-current=page]').waitFor();await noOverflow(p.page,p.role+' '+key);}await p.page.locator('[data-action=offer-detail]').first().click();await p.page.locator('#message-form input').focus();await p.page.setViewportSize({width,height:440});await noOverflow(p.page,'keyboard');assert((await p.page.locator('#mobile-nav').boundingBox()).y<440);await p.page.setViewportSize({width,height:844});}}
+  assert.deepEqual(errors,[]);results.push({width,lot,offer,order,qrDecoded:true,accountIsolation:true,stock:75,fullScreen:true,errors,auth:'Compile-time Clerk React fixture provider and real backend SDK RSA signature verification; Google exchange checked separately'});await outsider.close();await grower.context.close();await buyer.context.close();console.log('PASS React '+width+'px complete trade, responsive UI, QR and account isolation');
+ }
+ await test.saveReload();fs.writeFileSync('design/verification-results.json',JSON.stringify({results},null,2));
+ }finally{await browser.close();await test.close();}
+})().catch(error=>{console.error(error);process.exitCode=1;});

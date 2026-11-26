@@ -1,46 +1,13 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="EasyFarm local marketplace workspace">
-<title>EasyFarm Marketplace</title>
-<link rel="preload" href="assets/Geist.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="app.css">
-</head>
-<body data-loading="true">
-<div class="shell">
-  <aside class="sidebar">
-    <a class="brand" href="/" aria-label="EasyFarm landing page"><span aria-hidden="true"></span>EasyFarm</a>
-    <div id="farm-context" hidden></div>
-    <button type="button" class="mobile-menu" aria-expanded="false" aria-controls="app-nav">Workspace menu <span aria-hidden="true">☰</span></button>
-    <nav id="app-nav" aria-label="Workspace navigation"></nav>
-    <div class="sidebar-bottom"><span class="workspace-person" id="sidebar-identity"></span><a href="/">Back to EasyFarm</a><span>Sample charts · illustrative imagery</span></div>
-  </aside>
-  <main>
-    <header class="workspace-bar">
-      <div><span id="workspace-role"></span><h1 id="view-title">Marketplace</h1></div>
-      <button type="button" id="account-button" class="account-button" aria-label="Open account"></button>
-    </header>
-    <div id="notice" role="status" hidden></div>
-    <div id="content" class="content" aria-busy="true"></div>
-  </main>
-  <nav id="mobile-nav" class="mobile-nav" aria-label="Mobile workspace navigation"></nav>
-</div>
-<dialog id="editor" aria-labelledby="editor-title">
-  <form id="editor-form">
-    <div class="dialog-heading"><h2 id="editor-title"></h2><button type="button" id="close-editor" aria-label="Close editor">×</button></div>
-    <div id="fields" class="fields"></div>
-    <p id="editor-error" role="alert" hidden></p>
-    <button class="primary" id="save-editor" type="submit">Save</button>
-  </form>
-</dialog>
-<dialog id="account-dialog" aria-labelledby="account-title">
-  <div class="dialog-heading"><h2 id="account-title">Your account</h2><button type="button" id="close-account" aria-label="Close account">×</button></div>
-  <div id="account-details"></div>
-  <button type="button" id="sign-out">Sign out</button>
-</dialog>
-<script src="auth-client.js" defer></script>
-<script src="app.js" defer></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#263421" />
+    <title>EasyFarm Marketplace</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

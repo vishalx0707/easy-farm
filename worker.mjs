@@ -27,8 +27,16 @@ export class Marketplace extends DurableObject{
  }
 }
 export default{async fetch(request,env){
- const url=new URL(request.url);if(url.pathname.startsWith('/api/'))return env.MARKETPLACE.getByName('easyfarm-demo').fetch(request);
+ const url=new URL(request.url);let result;
+ if(url.pathname.startsWith('/api/'))result=await env.MARKETPLACE.getByName('easyfarm-demo').fetch(request);
+ else{
  if(url.pathname==='/')url.pathname='/index.html';if(url.pathname==='/film-script')url.pathname='/film-script.html';
- if(url.pathname==='/login')url.pathname='/login.html';if(['/buyer','/grower'].includes(url.pathname))url.pathname='/app.html';
- return env.ASSETS.fetch(new Request(url,request));
+ if(url.pathname==='/login')url.pathname='/login.html';if(url.pathname==='/onboarding')url.pathname='/onboarding.html';if(['/buyer','/grower'].includes(url.pathname))url.pathname='/app.html';
+ result=await env.ASSETS.fetch(new Request(url,request));
+ }
+ const response=new Response(result.body,result);
+ response.headers.set('X-Content-Type-Options','nosniff');
+ response.headers.set('Referrer-Policy','strict-origin-when-cross-origin');
+ response.headers.set('Content-Security-Policy',"frame-ancestors 'self'; object-src 'none'; base-uri 'self'");
+ return response;
 }};

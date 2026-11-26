@@ -4,7 +4,7 @@ const { stat } = require("node:fs/promises");
 const { extname, resolve, sep } = require("node:path");
 const marketplaceApi = require("./marketplace-api");
 
-const root = __dirname;
+const projectRoot = __dirname;
 const host = "127.0.0.1";
 const port = Number(process.env.EASYFARM_PORT || 3000);
 const types = {
@@ -16,10 +16,14 @@ const types = {
   ".jpg": "image/jpeg",
   ".png": "image/png",
   ".webp": "image/webp",
-  ".woff2": "font/woff2"
+  ".woff2": "font/woff2",
+  ".svg": "image/svg+xml"
 };
 
-function createAppServer(api = marketplaceApi) { return createServer(async (request, response) => {
+function createAppServer(api = marketplaceApi, { staticRoot = resolve(projectRoot,'dist') } = {}) { const root=staticRoot; return createServer(async (request, response) => {
+  response.setHeader('X-Content-Type-Options','nosniff');
+  response.setHeader('Referrer-Policy','strict-origin-when-cross-origin');
+  response.setHeader('Content-Security-Policy',"frame-ancestors 'self'; object-src 'none'; base-uri 'self'");
   let pathname;
   try {
     pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
@@ -32,11 +36,11 @@ function createAppServer(api = marketplaceApi) { return createServer(async (requ
     response.writeHead(405, { Allow: "GET, HEAD" }).end();
     return;
   }
-  const page = pathname === "/" ? "/index.html" : pathname === "/film-script" ? "/film-script.html" : pathname === '/login' ? '/login.html' : ['/buyer','/grower'].includes(pathname) ? '/app.html' : pathname;
+  const page = pathname === "/" ? "/index.html" : pathname === "/film-script" ? "/film-script.html" : pathname === '/login' ? '/login.html' : pathname === '/onboarding' ? '/onboarding.html' : ['/buyer','/grower'].includes(pathname) ? '/app.html' : pathname;
   const file = resolve(root, "." + page);
   const type = types[extname(file)];
   if (!file.startsWith(root + sep) || !type ||
-      !["/index.html", "/film-script.html", "/app.html", "/app.js", "/app.css", "/auth-client.js", "/login.html", "/login.js", "/login.css", "/landing.js", "/landing.css", "/EasyFarm Footage.html", "/Antigravity Footage.html"].includes(page) &&
+      !["/index.html", "/film-script.html", "/app.html", "/login.html", "/onboarding.html", "/landing.js", "/landing.css"].includes(page) &&
       !pathname.startsWith("/assets/") && !pathname.startsWith("/hero-footage/")) {
     response.writeHead(404).end();
     return;
