@@ -129,3 +129,9 @@ The app workspace and public trace use forest gradients and a subtle procedural 
 The video reference was visually reviewed using 54 frames across its 13:31 duration, including product imagery comparisons, spacing/type refinements, price/quantity regrouping and persistent purchase controls. Its narration could not be retrieved, so no claim of full audio review is made. The adaptation uses honest farm/quality labels rather than inventing reviews, urgency or certification. Reference video and analysis captures remain local and ignored.
 
 Validation: TypeScript and the complete React browser trade suite passed at 1440, 390 and 360 px, including responsive overflow, keyboard-height dialogs, live offer totals, negotiation, account isolation, persisted reload and QR decoding.
+
+## Loading improvements
+
+Route code is loaded on demand, the optional desktop 3D scene waits until authentication is ready, and the Node server compresses text assets and caches versioned bundles. The initial script transfer in a fresh local browser fell from about 904 KB to 141 KB; total measured local script transfer was about 357 KB. Actual Clerk Google sign-in became ready in 1.5–2 seconds in the measured desktop/phone runs; provider/network conditions can vary and the originally reported indefinite delay was not reproduced.
+
+Backend verified Google profile lookups are deduplicated and cached for at most 60 seconds per process (bounded to 500 entries; failures are evicted). Session active/revoked checks and JWT signature/origin verification still run for every request; marketplace roles/permissions still come from the database. Token retrieval and API requests are bounded, and stalled Clerk startup displays a retry prompt after 12 seconds. Token/security tests verify that repeated requests reuse the profile while still checking sessions and rejecting revoked tokens.

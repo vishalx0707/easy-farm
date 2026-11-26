@@ -6,6 +6,15 @@ export function createAuth(config, providedClient) {
   const secretKey=config.CLERK_SECRET_KEY||'';
   const configured=Boolean(publishableKey&&secretKey);
   const client=providedClient||(configured?createClerkClient({publishableKey,secretKey,jwtKey:config.CLERK_JWT_KEY}):null);
+  // Profile lookups are shared briefly; session status is checked on EVERY call.
+  const profiles=new Map();
+  function profileFor(id){
+    const cached=profiles.get(id);if(cached&&cached.until>Date.now())return cached.promise;
+    if(profiles.size>=500)profiles.delete(profiles.keys().next().value);
+    const entry={until:Date.now()+60000,promise:null};
+    entry.promise=client.users.getUser(id).catch(error=>{if(profiles.get(id)===entry)profiles.delete(id);throw error;});
+    profiles.set(id,entry);return entry.promise;
+  }
   return {
     configured,
     publicConfig:{provider:'clerk',publishableKey,google:configured},
@@ -21,7 +30,7 @@ export function createAuth(config, providedClient) {
       if(!state.isAuthenticated)return null;
       const {userId,sessionId}=state.toAuth();
       if(!userId||!sessionId)return null;
-      const [user,session]=await Promise.all([client.users.getUser(userId),client.sessions.getSession(sessionId)]);
+      const [user,session]=await Promise.all([profileFor(userId),client.sessions.getSession(sessionId)]);
       if(session.status!=='active'||session.userId!==userId)return null;
       const google=user.externalAccounts.find(account=>account.provider==='oauth_google');
       const primary=user.emailAddresses.find(email=>email.id===user.primaryEmailAddressId);

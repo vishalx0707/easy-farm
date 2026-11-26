@@ -65,6 +65,12 @@ export function Login() {
   useEffect(() => {
     document.title = "Sign in · EasyFarm";
   }, []);
+  const [showScene, setShowScene] = useState(false);
+  useEffect(() => {
+    if (!isLoaded) return;
+    const timer = setTimeout(() => setShowScene(true), 4000);
+    return () => clearTimeout(timer);
+  }, [isLoaded]);
   if (params.has("callback"))
     return (
       <div className="auth-screen">
@@ -111,12 +117,13 @@ export function Login() {
     <div className="auth-layout light-ui">
       <aside className="auth-story">
         <Brand />
-        {!matchMedia("(max-width:760px), (prefers-reduced-motion:reduce)")
-          .matches && (
-          <Suspense fallback={null}>
-            <SeedScene />
-          </Suspense>
-        )}
+        {showScene &&
+          !matchMedia("(max-width:760px), (prefers-reduced-motion:reduce)")
+            .matches && (
+            <Suspense fallback={null}>
+              <SeedScene />
+            </Suspense>
+          )}
         <div className="auth-story-copy">
           <p className="eyebrow">GROWN WITH CARE. TRADED DIRECT.</p>
           <h1>

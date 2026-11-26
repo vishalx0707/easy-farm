@@ -12,8 +12,24 @@ export function useApi() {
   const { getToken } = useAuth();
   return useCallback(
     async <T,>(path: string, body?: unknown): Promise<T> => {
-      const token = await getToken();
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const token = await Promise.race([
+        getToken(),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(
+            () =>
+              reject(
+                new ApiError(
+                  "Secure sign-in took too long. Please retry.",
+                  408,
+                ),
+              ),
+            10000,
+          );
+        }),
+      ]).finally(() => clearTimeout(timer));
       const response = await fetch(path, {
+        signal: AbortSignal.timeout(15000),
         method: body ? "POST" : "GET",
         headers: {
           ...(token ? { Authorization: "Bearer " + token } : {}),

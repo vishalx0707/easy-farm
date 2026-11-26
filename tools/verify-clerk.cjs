@@ -20,6 +20,7 @@ const assert=require('node:assert/strict');
   await test.saveReload();const after=await(await fetch(test.base+'/api/state',{headers:{Authorization:'Bearer '+good}})).json();assert.deepEqual(after,before);
   const csrf=await fetch(test.base+'/api/profile',{method:'POST',headers:{Authorization:'Bearer '+good,Origin:'https://unrelated.example','Content-Type':'application/json'},body:JSON.stringify(values)});assert.equal(csrf.status,403);
   for(const path of ['/api/auth/sign-in/email','/api/auth/sign-up/email','/api/auth/sign-in/social'])assert.equal((await post(path,{})).status,404);
+  const beforeCalls={...test.calls};await get(good);await get(good);assert.equal(test.calls.profiles,beforeCalls.profiles);assert.equal(test.calls.sessions,beforeCalls.sessions+2);
   test.revoke(good);assert.equal(await get(good),401);
   const domain=require('../marketplace-domain.cjs');
   const legacy={profiles:[{id:'old-user',role:'grower',organization:'Legacy Farm',email:'same@example.test',googleSubject:'google-old',clerkId:null}]};

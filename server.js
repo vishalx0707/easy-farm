@@ -51,7 +51,7 @@ function createAppServer(api = marketplaceApi, { staticRoot = resolve(projectRoo
     return;
   }
 
-  const headers = { "Content-Type": type, "Cache-Control": "no-cache", "Accept-Ranges": "bytes" };
+  const headers = { "Content-Type": type, "Cache-Control": /\/assets\/[^/]+-[A-Za-z0-9_-]{8,}\.(js|css|woff2)$/.test(page) ? "public, max-age=31536000, immutable" : "no-cache", "Accept-Ranges": "bytes" };
   let start = 0;
   let end = info.size - 1;
   let status = 200;
@@ -68,7 +68,8 @@ function createAppServer(api = marketplaceApi, { staticRoot = resolve(projectRoo
     status = 206;
     headers["Content-Range"] = `bytes ${start}-${end}/${info.size}`;
   }
-  headers["Content-Length"] = end - start + 1;
+  const gzip=status===200&&/\b(gzip)\b/.test(request.headers["accept-encoding"]||"")&&[".js",".css",".svg",".html"].includes(extname(file));
+  if(gzip){headers["Content-Encoding"]="gzip";headers.Vary="Accept-Encoding";}else headers["Content-Length"] = end - start + 1;
   response.writeHead(status, headers);
   if (request.method === "HEAD" || !info.size) {
     response.end();
@@ -77,7 +78,7 @@ function createAppServer(api = marketplaceApi, { staticRoot = resolve(projectRoo
   const stream = createReadStream(file, { start, end });
   stream.on("error", () => response.destroy());
   response.on("close", () => stream.destroy());
-  stream.pipe(response);
+  if(gzip){const compressor=require("node:zlib").createGzip();compressor.on("error",()=>response.destroy());stream.pipe(compressor).pipe(response);}else stream.pipe(response);
 }); }
 
 if(require.main===module)createAppServer().listen(port,host,()=>console.log(`EasyFarm running at http://${host}:${port}`));
