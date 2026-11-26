@@ -1,0 +1,70 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "trailingSlash": false,
+  "functions": {
+    "api/marketplace.mjs": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/marketplace?__route=/:path*"
+    },
+    {
+      "source": "/film-script",
+      "destination": "/film-script.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/login.html"
+    },
+    {
+      "source": "/onboarding",
+      "destination": "/onboarding.html"
+    },
+    {
+      "source": "/buyer",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/grower",
+      "destination": "/app.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'self'; object-src 'none'; base-uri 'self'"
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" },
+        { "key": "Vary", "value": "Origin, Authorization" }
+      ]
+    },
+    {
+      "source": "/",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache" }
+      ]
+    },
+    {
+      "source": "/(index\\.html|app\\.html|login\\.html|onboarding\\.html|film-script\\.html|film-script|login|onboarding|buyer|grower)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache" }
+      ]
+    }
+  ]
+}

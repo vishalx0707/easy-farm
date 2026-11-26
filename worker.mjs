@@ -4,7 +4,7 @@ import {handleMarketplace} from './marketplace-service.mjs';
 import domain from './marketplace-domain.cjs';
 
 export class Marketplace extends DurableObject{
- constructor(ctx,env){super(ctx,env);this.sql=ctx.storage.sql;this.sql.exec('CREATE TABLE IF NOT EXISTS market (id INTEGER PRIMARY KEY, document TEXT NOT NULL)');this.auth=createAuth(env);}
+ constructor(ctx,env){super(ctx,env);this.env=env;this.sql=ctx.storage.sql;this.sql.exec('CREATE TABLE IF NOT EXISTS market (id INTEGER PRIMARY KEY, document TEXT NOT NULL)');this.auth=createAuth(env);}
  read(){
   const rows=this.sql.exec('SELECT document FROM market WHERE id=1').toArray();const db=rows.length?JSON.parse(rows[0].document):structuredClone(domain.seed);db.profiles||=[];
   if(this.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='user'").toArray().length){
@@ -23,7 +23,7 @@ export class Marketplace extends DurableObject{
    while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>16000){await reader.cancel();return Response.json({error:'Request is too large.'},{status:413});}chunks.push(value);}
    const bytes=new Uint8Array(size);let offset=0;for(const part of chunks){bytes.set(part,offset);offset+=part.length;}request=new Request(request,{body:bytes});
   }
-  return handleMarketplace(request,{auth:this.auth,store:this});
+  return handleMarketplace(request,{auth:this.auth,store:this,config:this.env});
  }
 }
 export default{async fetch(request,env){

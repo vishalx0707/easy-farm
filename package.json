@@ -10,12 +10,13 @@
     "test:browser": "node tools/build.cjs --fixtures && node tools/verify.cjs",
     "test:auth": "node tools/verify-clerk.cjs",
     "test:worker": "npm run build && wrangler deploy --dry-run --outdir .wrangler/test-bundle && node tools/verify-worker.cjs",
+    "test:vercel": "npm run build && node tools/verify-vercel.cjs",
     "prestart": "npm run build",
     "dev": "vite",
     "typecheck": "tsc --noEmit"
   },
   "engines": {
-    "node": ">=24"
+    "node": "24.x"
   },
   "dependencies": {
     "@clerk/backend": "^3.33.1",

@@ -1,4 +1,5 @@
 import {createClerkClient} from '@clerk/backend';
+import {resolveBackendRequestOrigin} from './origin.mjs';
 
 export function createAuth(config, providedClient) {
   const publishableKey=config.CLERK_PUBLISHABLE_KEY||config.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY||'';
@@ -8,12 +9,14 @@ export function createAuth(config, providedClient) {
   return {
     configured,
     publicConfig:{provider:'clerk',publishableKey,google:configured},
-    async identity(request){
+    async identity(request, originOverride){
       if(!configured)return null;
       // API traffic uses the SDK's short-lived session token, not a user ID,
       // metadata role, legacy cookie or browser-provided profile.
       if(!request.headers.get('Authorization')?.startsWith('Bearer '))return null;
-      const origin=new URL(request.url).origin;
+      const resolved=originOverride?{ok:true,origin:originOverride}:resolveBackendRequestOrigin(request,config);
+      if(!resolved.ok)return null;
+      const origin=resolved.origin;
       const state=await client.authenticateRequest(request,{authorizedParties:[origin],acceptsToken:'session_token'});
       if(!state.isAuthenticated)return null;
       const {userId,sessionId}=state.toAuth();

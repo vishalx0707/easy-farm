@@ -2,6 +2,7 @@ node_modules/
 .clerk/
 .easyfarm*/
 .wrangler/
+.vercel/
 dist/
 .env*
 .dev.vars*

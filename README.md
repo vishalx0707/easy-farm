@@ -36,16 +36,47 @@ The clean full-screen `/login` page contains only Google sign-in. After Google r
 
 The development instance uses Clerk's shared Google development credentials. A production release requires a Clerk production instance, an owned domain and production Google OAuth configuration in Clerk. No production auth instance or hosted release has been configured. Clerk's Google redirect opens successfully; completion with a real Google account is a separate manual check and is not established by the fixture tests below.
 
-## Cloudflare
+## Vercel & Cloudflare Hosting
 
-The project is configured for the connected Cloudflare account in `wrangler.jsonc`. It uses Workers Static Assets plus a SQLite-backed Durable Object. The Node and Worker backends share `marketplace-domain.cjs` and the authenticated API service. One object coordinates this demo marketplace, serializing stock reservation and keeping persistent profiles and trade records.
+EasyFarm is configured for **Vercel** frontend/API hosting backed by the persistent **Cloudflare Workers** SQLite-backed Durable Object backend (`worker.mjs`), while preserving standalone Cloudflare and local Node (`server.js`) operation.
 
-- `npm run build` compiles React into `dist/` and copies public marketing/media assets, excluding credentials, databases, source code and raw footage.
-- `npm run dev:cloudflare` runs at [127.0.0.1:8787](http://127.0.0.1:8787/login) with persistent local storage in `.wrangler/local`.
-- `npm run check:cloudflare` validates packaging without deploying.
-- `npm run deploy` is the explicit remote deployment command. It has not been run.
+### Architecture
 
-Local `.dev.vars` files are not uploaded automatically. Before an authorized deployment, provision the intended instance's Clerk keys securely as Worker secrets and configure its application domain. Missing keys cause protected APIs to fail closed. The SQLite migration and binding are tracked. First deployment initializes a separate seeded marketplace; it does not upload the private Node database. No Netlify configuration is included.
+- **Vercel static output (`dist/`)**: `vercel.json` sets `"framework": null`, `"buildCommand": "npm run build"`, `"outputDirectory": "dist"`, `"trailingSlash": false`, and pins Node `24.x` via `package.json` `engines.node`. `tools/build.cjs` emits only compiled React bundles (`app.html`, `login.html`, `onboarding.html`), marketing/film assets (`index.html`, `landing.css`, `landing.js`, `film-script.html`), `assets/`, and `hero-footage/fresh-produce/*.jpg`. Source files, `.dev.vars`, `.easyfarm*`, and fixture code are excluded by `tools/build.cjs` and `.vercelignore`.
+- **Routes & deep links**: `vercel.json` rewrites `/film-script`, `/login`, `/onboarding`, `/buyer`, `/grower`, and `/api/:path*` (`-> /api/marketplace?__route=/:path*`). `/app.html?batch=...` is served directly for public QR traces. Security headers (`X-Content-Type-Options`, `Referrer-Policy`, `Content-Security-Policy`) and `Cache-Control: no-cache` for HTML routes / `Cache-Control: no-store` + `Vary: Origin, Authorization` for `/api/*` are configured without wildcard CORS.
+- **Authenticated API proxy (`api/marketplace.mjs`, `api/_proxy.mjs`, `origin.mjs`)**: Runs on Vercel's Node 24 runtime, validates the request's canonical origin against `EASYFARM_TRUSTED_ORIGINS` (or Vercel-assigned system domains, never trusting `X-Forwarded-Host`), enforces same-origin `application/json` checks on `POST` writes, enforces the 16 KB body limit, fails closed (`503`) if unconfigured, and forwards requests to `EASYFARM_BACKEND_URL` with `X-EasyFarm-Proxy-Secret` and `X-EasyFarm-Origin`.
+- **Cloudflare Worker backend (`worker.mjs`, `auth.mjs`, `marketplace-service.mjs`, `wrangler.jsonc`)**: Uses Workers Static Assets plus a SQLite-backed Durable Object (`Marketplace`). When `EASYFARM_PROXY_SECRET` is set, direct requests to `workers.dev` without the matching secret or from an untrusted `X-EasyFarm-Origin` fail closed with `403`. `auth.mjs` binds Clerk JWT `authorizedParties` (`azp`) to the verified frontend origin, `marketplace-service.mjs` checks write `Origin` against that verified origin, and `/api/qr/:orderId` encodes the verified frontend origin.
+
+### Commands
+
+- `npm run build` — compiles React into `dist/` and copies public marketing/media assets.
+- `npm run dev:cloudflare` — runs the local Worker at [127.0.0.1:8787](http://127.0.0.1:8787/login) with persistent local storage in `.wrangler/local`.
+- `npm run check:cloudflare` — validates Cloudflare Worker packaging (`wrangler deploy --dry-run`) without deploying.
+- `npm run deploy` — explicit Cloudflare Worker deployment command (not run).
+- `vercel build` / `vercel deploy` — Vercel local build / remote deployment commands after `vercel login` and `vercel link` (not run).
+
+### Required Environment Variables & Provisioning
+
+Local `.dev.vars` files are never uploaded automatically. Before an authorized production deployment, provision:
+
+1. **Cloudflare Worker secrets/variables** (`wrangler secret put` / Cloudflare dashboard):
+   - `CLERK_PUBLISHABLE_KEY` (`pk_live_...` for production)
+   - `CLERK_SECRET_KEY` (`sk_live_...` for production)
+   - `EASYFARM_PROXY_SECRET` (random shared secret matching Vercel)
+   - `EASYFARM_TRUSTED_ORIGINS` (comma-separated canonical HTTPS origins, e.g. `https://app.example.com`)
+2. **Vercel Project environment variables**:
+   - `EASYFARM_BACKEND_URL` (the `https://` origin of the deployed Cloudflare Worker, with no path or trailing slash)
+   - `EASYFARM_PROXY_SECRET` (same shared secret as the Worker)
+   - `EASYFARM_TRUSTED_ORIGINS` (canonical HTTPS frontend origins; if unset in preview/non-custom-domain setups, Vercel system URLs are used)
+3. **Clerk & Google OAuth production setup**:
+   - A Clerk **production** instance, an owned custom domain, and production Google OAuth credentials in Clerk (email/password remain disabled per `clerk-config.json`).
+
+### Readiness Limitations & Vercel Plan Constraints
+
+- **Commercial B2B launch requires Vercel Pro (or Enterprise)**: Vercel's free Hobby plan is restricted to personal, non-commercial use under Vercel's Terms of Service and Fair Use Guidelines.
+- **Unlinked local Vercel CLI**: `vercel login` / `vercel link` has not been run in this environment, so `vercel build` could not connect to a Vercel project locally; the Vercel adapter, routing, headers, and Worker integration are verified via `npm run test:vercel` instead.
+- **Runtime & scaling constraints**: `vercel.json` sets `maxDuration: 30` (within Hobby's 300s cap), and `api/_proxy.mjs` enforces a 16 KB API payload cap (well under Vercel's 4.5 MB limit). The backend currently coordinates marketplace state in a single SQLite-backed Durable Object (`easyfarm-demo`); multi-region or high-volume commercial traffic would require sharding or a dedicated external database.
+- **Non-production product placeholders**: Payments remain explicitly simulated, quality checks are grower-declared/simulated, market charts use illustrative values, and live Google OAuth login on the hosted domain requires manual verification after provisioning production Clerk/Google credentials. First Worker deployment initializes a separate seeded marketplace; it does not upload the private Node `.easyfarm/market.json` database. No Netlify configuration is included.
 
 ## Portals and presentation
 
@@ -74,9 +105,11 @@ Credentials, private databases, `.clerk`, `.wrangler`, build output and QA recor
 ## Verification
 
 ```powershell
+npm run typecheck
 npm run test:auth
-npm run test:browser
 npm run test:worker
+npm run test:vercel
+npm run test:browser
 ```
 
 `test:auth` uses the real Clerk backend SDK with a generated RSA test key, isolated fake provider records and an ephemeral test server. It verifies signature rejection, expiry, origin binding, session revocation, one-time profile completion, CSRF checks, disabled legacy auth endpoints, persistence round-trip and strict legacy Google account matching. Fixtures are never imported by the running application or served as endpoints.
@@ -84,5 +117,7 @@ npm run test:worker
 `test:browser` first builds a separate fixture bundle under the ignored `.easyfarm-react-test/dist`, then starts its own isolated server. Vite aliases @clerk/react to a test provider only for that build; the production build imports the actual Clerk package, contains no fixture tokens/provider, and exposes no testing endpoint. It uses signed fixture tokens and mocked Clerk React session state to test the actual app/API at 1440, 390 and 360 pixels: profile completion, portal routing, harvest publishing, buyer discovery, offer, messages, counteroffers, acceptance, delivery, simulated payment, reload, QR decode, sign-out and returning-session routing. It checks account isolation, role spoofing rejection, single stock reservation, mobile navigation, overflow and reduced-height messaging. The suite verifies that profile setup happens on `/onboarding`, that the workspace fills the viewport, and that account controls remain in the correct desktop/mobile location. Screenshots and results are written under `design/qa-*.png` and `design/verification-results.json`.
 
 `test:worker` bundles the actual Worker and runs it in Cloudflare's local workerd/Miniflare runtime with SQLite persistence isolated under `.wrangler/worker-fixtures`. It tests profile ownership, trade, messaging, single stock reservation, payment/delivery records, public trace privacy, QR decoding and persistence after the runtime restarts. Internal RPC receives fixture identities, so this validates Worker storage/domain behavior rather than the Google exchange.
+
+`test:vercel` validates production `dist/` hygiene (no source/secret leaks or fixture tokens), `vercel.json` routing/header rules, and runs `api/_proxy.mjs` against both a real Miniflare SQLite Durable Object Worker (including direct-access `403` lockouts, QR origin encoding, and restart persistence) and an isolated Clerk RSA SDK backend server. It verifies fail-closed `503`/`502` behavior, spoofed `Host` / `X-Forwarded-Host` / `Origin` / `azp` / revoked-token rejection, `Cache-Control: no-store`, omitted wildcard CORS, concurrent double-accept stock reservation, private data isolation, and rendered Playwright desktop (`1440px`) and mobile (`390px`, `360px`) routes (`/`, `/film-script`, `/login`, `/onboarding`, `/buyer`, `/grower`, `/app.html?batch=...`) with zero overflow or clipped dialogs.
 
 TypeScript checks, the full React browser trade suite, backend token checks and Cloudflare SQLite restart checks passed. Additional browser checks exercised the real Clerk React UI in both Node and the local Workers runtime, the Google authorization handoff, Google-only signup continuation, source/secret isolation and the desktop Three.js canvas. User-supplied HTML in messages was rendered as text. The actual Clerk React SDK also loaded at desktop and phone sizes, and its Google button reached Google's authorization screen. The automated suites do not establish real Google account consent, callback exchange or production deployment. Complete the manual Google login on the regular local server to verify that last provider-dependent step.

@@ -1,0 +1,18 @@
+.clerk/
+.easyfarm*/
+.wrangler/
+.vercel/
+.env*
+.dev.vars*
+*.log
+design/
+dist/
+hero-footage/clean-4k/
+hero-footage/commercial-previews/
+hero-footage/industrial/
+hero-footage/verified-4k/
+hero-footage/fresh-produce/*.mp4
+hero-footage/fresh-produce/*.webm
+assets/*.mp4
+Antigravity Footage.html
+EasyFarm Footage.html
