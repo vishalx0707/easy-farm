@@ -13,7 +13,7 @@ Open [EasyFarm sign-in](http://127.0.0.1:3000/login). The marketing landing page
 
 The app is built with React 19, TypeScript, Vite 8, React Router, Tailwind CSS 4 and shadcn/ui (Radix) components. TanStack Query owns server state, mutations and refresh; React Hook Form and Zod validate profile and trade forms. The backend remains the shared, ownership-checked marketplace API. No trade data or permissions live only in the browser.
 
-GSAP handles short, scoped screen transitions. Lenis smooths the internal desktop workspace only; phone scrolling, messages, dialogs and reduced-motion users keep native scrolling. A lazy React Three Fiber / Three.js leaf scene appears on desktop sign-in with a static brand pattern as fallback. It is skipped on phones and for reduced motion. No 3D code is required to trade.
+GSAP handles short, scoped screen transitions. Motion for React animates the shared navigation highlight and brief leaf opening. Lenis smooths the internal desktop workspace only; phone scrolling, messages, dialogs and reduced-motion users keep native scrolling. A lazy React Three Fiber / Three.js leaf scene appears on desktop sign-in with a static brand pattern as fallback. It is skipped on phones and for reduced motion. No 3D code is required to trade.
 
 `npm start` builds the React app and runs the local Node server. For hot reloading, keep the Node server running and use `npm run dev` at http://127.0.0.1:5173; Vite proxies its API requests to Node. `npm run typecheck` validates TypeScript. The original marketing page, HeroLoop and film page remain independent.
 
@@ -81,6 +81,8 @@ Local `.dev.vars` files are never uploaded automatically. Before an authorized p
 ## Portals and presentation
 
 The workspace follows `design/app-references/01-primary-ui.png`: translucent olive acrylic surfaces, cream lot records, restrained lime actions and quiet line icons. The desktop workspace fills the screen, with account access in the bottom-left sidebar. Desktop uses a persistent sidebar; phone layouts use five labelled bottom icons for Home, Crops/Produce, Offers, Orders and Messages. Catalogue and order views scroll within the workspace. Forms, filters, messaging and delivery timelines support narrow phone screens.
+
+The fieldwork redesign uses the same self-hosted PP Neue Montreal fonts as the user's Grit Listening Studio, quiet forest gradients and fine contour texture. Home groups harvests, price perspective and trade activity. Ready-to-trade filtering and price sorting distinguish seller-published lots from examples. Farm discovery searches farm, grower and locality. Illustrative Chevella/Moinabad examples do not imply registered nearby growers or GPS distance. Authenticated portals check for updates every six seconds while open. [Design and generated-image prompt](design/fieldwork-redesign.md).
 
 - Growers manage farm profiles, publish harvest lots, compare incoming offers, negotiate, accept orders and update delivery milestones.
 - Buyers search/filter produce, view farms and lot terms, submit offers, negotiate, message and track purchases.

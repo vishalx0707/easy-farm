@@ -3,8 +3,8 @@ const now = () => new Date().toISOString();
 const id = prefix => prefix + "-" + randomUUID();
 const seed = {
   farms: [
-    { id: "meadow", name: "Meadow Lane Farm", person: "Maya Rao", location: "Nashik", bio: "We grow peppers and tomatoes in a greenhouse and pack to order.", image: "assets/posters/03-tomato-harvest-4k.jpg" },
-    { id: "riverbend", name: "Riverbend Farm", person: "Dev Kumar", location: "Pune", bio: "Field-grown carrots, harvested in small batches.", image: "assets/posters/02-farmer-golden-field-4k.jpg" }
+    { id: "meadow", name: "Meadow Lane Farm", person: "Maya Rao", location: "Chevella, Telangana", bio: "Illustrative greenhouse farm near Hyderabad. Sample profile; not a registered seller.", image: "assets/posters/03-tomato-harvest-4k.jpg" },
+    { id: "riverbend", name: "Riverbend Farm", person: "Dev Kumar", location: "Moinabad, Telangana", bio: "Illustrative field-grown produce farm near Hyderabad. Sample profile; not a registered seller.", image: "assets/posters/02-farmer-golden-field-4k.jpg" }
   ],
   listings: [
     { id: "peppers", farm: "meadow", crop: "Red bell peppers", category: "Peppers", quantity: 240, price: 37, grade: "A", harvest: "", pickup: "Friday, 8–10 am", notes: "Greenhouse lot. Packed in reusable crates.", quality: "Grower declared", open: true },
@@ -141,7 +141,8 @@ function visibleState(db,user){
   const own=farm=>db.farms.some(f=>f.id===farm&&f.owner===user.id);
   const offers=db.offers.filter(o=>user.role==='grower'?own(o.farm):o.buyer===user.id);
   const orders=db.orders.filter(o=>user.role==='grower'?own(o.farm):o.buyer===user.id);
-  const farms=db.farms.map(({owner,...farm})=>({...farm,owned:owner===user.id,sample:!owner}));
+  // Refresh only the presentation of known unowned examples; preserve stored and owned farm records.
+  const farms=db.farms.map(({owner,...farm})=>({...farm,...(!owner&&seed.farms.some(f=>f.id===farm.id)?{location:seed.farms.find(f=>f.id===farm.id).location,bio:seed.farms.find(f=>f.id===farm.id).bio}:{}),owned:owner===user.id,sample:!owner}));
   return {user:{id:user.id,name:user.name,organization:user.organization,location:user.location,role:user.role,email:user.email},farms,listings:db.listings.map(l=>({...l,sample:!db.farms.find(f=>f.id===l.farm)?.owner})),offers,orders,history:db.history.filter(h=>orders.some(o=>o.id===h.order))};
 }
 function traceState(db,key){

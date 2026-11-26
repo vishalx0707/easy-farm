@@ -52,14 +52,18 @@ function SproutIcon() {
   return <Package size={23} strokeWidth={1.3} />;
 }
 export function LotCard({ lot, farm, go }: { lot: Lot; farm?: Farm; go: Go }) {
+  const view = farm?.owned ? "listings" : "catalogue";
   return (
     <article className="lot-card">
       <button
         className="lot-image"
         aria-label={"View " + lot.crop}
-        onClick={() => go("catalogue", "lot", lot.id)}
+        onClick={() => go(view, "lot", lot.id)}
       >
         <img src={photo(lot.category)} alt={lot.crop} loading="lazy" />
+        {lot.category === "Tomatoes" && (
+          <small className="photo-credit">Generated image</small>
+        )}
         <span>
           {lot.sample
             ? "Sample lot"
@@ -87,7 +91,7 @@ export function LotCard({ lot, farm, go }: { lot: Lot; farm?: Farm; go: Go }) {
             size="sm"
             variant="outline"
             data-action="lot"
-            onClick={() => go("catalogue", "lot", lot.id)}
+            onClick={() => go(view, "lot", lot.id)}
           >
             View lot
           </Button>
@@ -119,7 +123,11 @@ export function LotDetails({
     <div className="detail-layout">
       <div className="detail-visual">
         <img src={photo(lot.category)} alt={lot.crop} />
-        <p>Representative produce photography</p>
+        <p>
+          {lot.category === "Tomatoes"
+            ? "AI-generated representative produce image"
+            : "Representative produce photography"}
+        </p>
       </div>
       <section className="glass panel">
         <p className="eyebrow">CROP LOT · {lot.category}</p>
@@ -147,8 +155,14 @@ export function LotDetails({
         {lot.notes && <p className="notes">{lot.notes}</p>}
         {lot.sample && (
           <p className="simulation-note">
-            Illustrative lot · browse only. Choose a grower-published lot to
-            trade.
+            Sample lot · no seller account receives requests for this example.
+            Choose a grower-published lot to trade.
+          </p>
+        )}
+        {role === "buyer" && !lot.sample && (
+          <p className="trade-recipient">
+            <MessageCircle size={14} /> Your offer goes to {farm.person} at{" "}
+            {farm.name}. An order is created when terms are accepted.
           </p>
         )}
         <div className="actions">
@@ -410,6 +424,13 @@ export function OfferDetails({
               ) + "/kg",
             ],
             ["Last proposal", offer.by === "grower" ? "Grower" : "Buyer"],
+            [
+              "Recipient",
+              role === "buyer"
+                ? data.farms.find((f) => f.id === offer.farm)?.person ||
+                  "Grower"
+                : offer.buyerPerson,
+            ],
           ]}
         />
         {respond ? (

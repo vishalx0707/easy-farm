@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Float } from "@react-three/drei";
+import { Float, Environment, Lightformer } from "@react-three/drei";
 import { Group, Shape, QuadraticBezierCurve3, Vector3 } from "three";
 const leaf = new Shape();
 leaf.moveTo(-1, -0.6);
@@ -47,9 +47,14 @@ function Leaves() {
             ]}
           />
           <meshPhysicalMaterial
-            color="#8ab552"
-            roughness={0.32}
-            metalness={0.12}
+            color="#a2be64"
+            roughness={0.13}
+            metalness={0.08}
+            transmission={0.58}
+            thickness={0.7}
+            ior={1.45}
+            attenuationColor="#587c32"
+            attenuationDistance={2}
             clearcoat={1}
           />
         </mesh>
@@ -98,8 +103,31 @@ export default function SeedScene() {
             camera={{ position: [0, 0, 6], fov: 40 }}
             gl={{ alpha: true, antialias: true, powerPreference: "low-power" }}
           >
-            <ambientLight intensity={1.6} />
-            <directionalLight position={[2, 4, 5]} intensity={3} />
+            <ambientLight intensity={0.6} />
+            <directionalLight position={[2, 4, 5]} intensity={2} />
+            <Environment resolution={64} frames={1}>
+              <Lightformer
+                position={[-3, 3, 3]}
+                scale={[3, 5, 1]}
+                intensity={3}
+                color="#f6f1cf"
+                target={[0, 0, 0]}
+              />
+              <Lightformer
+                position={[4, 1, 2]}
+                scale={[1, 4, 1]}
+                intensity={4}
+                color="#e8f3c2"
+                target={[0, 0, 0]}
+              />
+              <Lightformer
+                position={[0, -3, -2]}
+                scale={[5, 2, 1]}
+                intensity={1.5}
+                color="#92ab58"
+                target={[0, 0, 0]}
+              />
+            </Environment>
             <Leaves />
           </Canvas>
         </Suspense>

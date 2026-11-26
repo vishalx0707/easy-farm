@@ -349,7 +349,7 @@ export function Onboarding() {
                   <Input
                     id="location"
                     autoComplete="address-level2"
-                    placeholder="Where are you based?"
+                    placeholder="e.g. Hyderabad, Telangana"
                     maxLength={100}
                     {...form.register("location")}
                   />

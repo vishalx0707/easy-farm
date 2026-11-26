@@ -162,7 +162,7 @@ export function TradeEditor({
               ? "Clear quantity, price and pickup terms help buyers make an offer."
               : edit.kind === "farm"
                 ? "Help buyers get to know the person behind the harvest."
-                : "Your quantity, price and pickup window travel with this offer."}
+                : "Sent directly to the other party’s portal. Accepted terms create an order for both accounts."}
           </DialogDescription>
         </DialogHeader>
         <form id="editor-form" onSubmit={form.handleSubmit(submit)}>

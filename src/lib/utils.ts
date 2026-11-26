@@ -14,7 +14,7 @@ export const photo = (category = "") =>
   ({
     Peppers: "/hero-footage/fresh-produce/poster-5479114.jpg",
     "Root vegetables": "/hero-footage/fresh-produce/poster-10787015.jpg",
-    Tomatoes: "/assets/posters/07-tomato-macro-detail-4k.jpg",
+    Tomatoes: "/assets/tomatoes-still-life.webp",
     "Leafy greens": "/assets/posters/08-couple-harvesting-4k.jpg",
   })[category] || "/assets/posters/04-vegetable-basket-harvest-4k.jpg";
 export const categories = [

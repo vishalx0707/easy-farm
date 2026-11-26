@@ -2,10 +2,12 @@ import { StrictMode, Component, lazy, Suspense, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { ClerkProvider, useAuth } from "@clerk/react";
 import { useEffect, useState } from "react";
+import { MotionConfig } from "motion/react";
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { LeafLoader, OpeningSequence } from "@/components/leaf-loader";
 const Login = lazy(() =>
   import("@/pages/auth").then((m) => ({ default: m.Login })),
 );
@@ -69,21 +71,20 @@ async function boot() {
   const root = createRoot(document.getElementById("root")!);
   const wrap = (children: ReactNode) => (
     <StrictMode>
-      <ErrorBoundary>
-        <QueryClientProvider client={cache}>
-          <TooltipProvider>
-            <Suspense
-              fallback={
-                <div className="startup" role="status">
-                  Opening your workspace…
-                </div>
-              }
-            >
-              {children}
-            </Suspense>
-          </TooltipProvider>
-        </QueryClientProvider>
-      </ErrorBoundary>
+      <MotionConfig reducedMotion="user">
+        <ErrorBoundary>
+          <QueryClientProvider client={cache}>
+            <TooltipProvider>
+              <OpeningSequence />
+              <Suspense
+                fallback={<LeafLoader overlay label="Opening your workspace" />}
+              >
+                {children}
+              </Suspense>
+            </TooltipProvider>
+          </QueryClientProvider>
+        </ErrorBoundary>
+      </MotionConfig>
     </StrictMode>
   );
   if (new URLSearchParams(location.search).has("batch")) {
@@ -96,11 +97,7 @@ async function boot() {
     );
     return;
   }
-  root.render(
-    <div className="startup" role="status">
-      Opening EasyFarm…
-    </div>,
-  );
+  root.render(<LeafLoader overlay label="Opening EasyFarm" />);
   try {
     const response = await fetch("/api/auth-config", {
       signal: AbortSignal.timeout(12000),
@@ -121,7 +118,7 @@ async function boot() {
           appearance={{
             variables: {
               colorPrimary: "#33492a",
-              fontFamily: "Geist, Arial, sans-serif",
+              fontFamily: "Montreal, Arial, sans-serif",
               borderRadius: "9px",
             },
           }}

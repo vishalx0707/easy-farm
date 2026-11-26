@@ -16,13 +16,14 @@ export function Animate({
       if (!matchMedia("(prefers-reduced-motion: reduce)").matches)
         gsap.fromTo(
           ref.current,
-          { opacity: 0, y: 9 },
+          { opacity: 0, y: 8, filter: "blur(3px)" },
           {
             opacity: 1,
             y: 0,
-            duration: 0.32,
+            filter: "blur(0px)",
+            duration: 0.42,
             ease: "power2.out",
-            clearProps: "transform",
+            clearProps: "transform,filter,opacity",
           },
         );
     },

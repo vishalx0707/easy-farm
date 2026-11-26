@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useDeferredValue } from "react";
+import { motion } from "motion/react";
 import { useAuth, useClerk } from "@clerk/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -42,7 +43,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
+import { MarketHome } from "@/components/market-home";
+import { LeafLoader } from "@/components/leaf-loader";
 import { Brand } from "@/components/brand";
 import { Animate, useSmoothWorkspace } from "@/components/motion";
 import { TradeEditor, type Edit } from "@/components/trade-editor";
@@ -59,7 +61,7 @@ import {
 } from "@/components/trade-details";
 import { ApiError, useApi, publicApi } from "@/lib/api";
 import type { State, Role, Farm, Action } from "@/lib/types";
-import { categories, money, photo, time } from "@/lib/utils";
+import { categories, money, time } from "@/lib/utils";
 const views = {
   overview: "Overview",
   catalogue: "Produce",
@@ -115,6 +117,7 @@ export function Marketplace() {
     ),
     [edit, setEdit] = useState<Edit | null>(null),
     [account, setAccount] = useState(false),
+    [farmSearch, setFarmSearch] = useState(""),
     [notice, setNotice] = useState("");
   const scroll = useRef<HTMLDivElement>(null),
     contents = useRef<HTMLDivElement>(null);
@@ -124,7 +127,7 @@ export function Marketplace() {
     queryFn: () => api<State>("/api/state"),
     enabled: isLoaded && !!isSignedIn,
     retry: false,
-    refetchInterval: 20000,
+    refetchInterval: 6000,
   });
   const data = query.data,
     role = data?.user?.role === "grower" ? "grower" : "buyer",
@@ -159,7 +162,8 @@ export function Marketplace() {
           {
             listing: "Harvest published.",
             farm: "Farm saved.",
-            offer: "Offer sent.",
+            offer:
+              "Offer saved and sent to the grower’s portal. Awaiting their response.",
             counter: "New terms sent.",
             message: "Message sent.",
             accept: "Offer accepted. Order created.",
@@ -226,9 +230,7 @@ export function Marketplace() {
           </>
         ) : (
           <>
-            <Skeleton className="h-9 w-64" />
-            <Skeleton className="h-40 w-80" />
-            <p role="status">Opening your workspace…</p>
+            <LeafLoader label="Opening your workspace" />
           </>
         )}
       </div>
@@ -262,6 +264,13 @@ export function Marketplace() {
         aria-current={view === v ? "page" : undefined}
         onClick={() => go(v)}
       >
+        {view === v && (
+          <motion.i
+            className="nav-active"
+            layoutId={mobile ? "mobile-active" : "sidebar-active"}
+            transition={{ type: "spring", stiffness: 420, damping: 38 }}
+          />
+        )}
         <Icon size={mobile ? 21 : 17} />
         <span>{mobile && v === "overview" ? "Home" : views[v]}</span>
         {!mobile &&
@@ -335,7 +344,9 @@ export function Marketplace() {
       </>
     );
   } else if (view === "overview")
-    body = <Home data={data} role={role} farm={farm} go={go} edit={setEdit} />;
+    body = (
+      <MarketHome data={data} role={role} farm={farm} go={go} edit={setEdit} />
+    );
   else if (view === "catalogue") body = <Catalogue data={data} go={go} />;
   else if (view === "listings")
     body = (
@@ -379,7 +390,7 @@ export function Marketplace() {
       <>
         <Section
           title={role === "grower" ? "Your farms" : "Meet your next grower"}
-          copy="Good connections start with knowing the farm."
+          copy="Find a grower by farm, person or locality. Sample farms are labelled."
         >
           {role === "grower" && (
             <Button onClick={() => setEdit({ kind: "farm" })}>
@@ -388,9 +399,25 @@ export function Marketplace() {
             </Button>
           )}
         </Section>
+        <div className="catalogue-toolbar">
+          <div className="search-field">
+            <Search size={17} />
+            <Input
+              aria-label="Search farms or locality"
+              placeholder="Search farms or locality · Chevella, Moinabad…"
+              value={farmSearch}
+              onChange={(e) => setFarmSearch(e.target.value)}
+            />
+          </div>
+        </div>
         <div className="farm-grid">
           {data.farms
             .filter((f) => role === "buyer" || f.owned)
+            .filter((f) =>
+              (f.name + " " + f.person + " " + f.location)
+                .toLowerCase()
+                .includes(farmSearch.toLowerCase()),
+            )
             .map((f) => (
               <article className="glass farm-card" key={f.id}>
                 <img
@@ -636,171 +663,6 @@ export function Marketplace() {
     </div>
   );
 }
-function Home({
-  data,
-  role,
-  farm,
-  go,
-  edit,
-}: {
-  data: State;
-  role: Role;
-  farm?: Farm;
-  go: Go;
-  edit: (e: Edit) => void;
-}) {
-  const user = data.user!,
-    lots = data.listings
-      .filter(
-        (l) =>
-          l.open && l.quantity > 0 && (role === "buyer" || l.farm === farm?.id),
-      )
-      .sort((a, b) => Number(a.sample) - Number(b.sample)),
-    lot = lots[0],
-    origin = data.farms.find((f) => f.id === lot?.farm),
-    pending = data.offers.filter(
-      (o) =>
-        o.status === "Pending" && (role === "buyer" || o.farm === farm?.id),
-    ).length,
-    active = data.orders.filter(
-      (o) =>
-        o.status !== "Delivered" && (role === "buyer" || o.farm === farm?.id),
-    );
-  return (
-    <section className="overview-hero">
-      <div className="overview-intro">
-        <p className="eyebrow">
-          {role === "grower" ? "GROWER" : "BUYER"} PORTAL ·{" "}
-          {role === "grower" ? farm?.name : user.organization}
-        </p>
-        <h2>
-          {role === "grower"
-            ? "Welcome back, " + user.name.split(" ")[0] + "."
-            : "Good food. Good business."}
-        </h2>
-        <p>
-          {role === "grower"
-            ? "Your harvest, incoming offers and pickups."
-            : "Source fresh produce, agree terms and track your purchases."}
-        </p>
-      </div>
-      <div className="overview-cards">
-        <article className="harvest-spotlight glass">
-          <img src={photo(lot?.category)} alt="Representative harvest" />
-          <div>
-            <p className="eyebrow">
-              {role === "grower"
-                ? lot
-                  ? "YOUR HARVEST"
-                  : "READY WHEN YOU ARE"
-                : lot?.sample
-                  ? "EXPLORE SAMPLE PRODUCE"
-                  : "DIRECT FROM GROWERS"}
-            </p>
-            <h3>
-              {lot?.crop ||
-                (role === "grower"
-                  ? "List your first harvest"
-                  : "Meet your next grower")}
-            </h3>
-            <p>
-              {lot
-                ? lot.quantity + " kg · " + money(lot.price) + "/kg"
-                : role === "grower"
-                  ? "Your produce. Your asking price."
-                  : "Know the farm behind your food."}
-            </p>
-            <Button
-              data-action={role === "grower" ? "edit-lot" : "browse"}
-              onClick={() =>
-                role === "grower"
-                  ? farm && edit({ kind: "listing", farm })
-                  : go("catalogue")
-              }
-            >
-              {role === "grower" ? "List harvest" : "Browse produce"}
-            </Button>
-          </div>
-        </article>
-        <article className="cream-panel lot-record">
-          <h3>
-            {role === "grower"
-              ? lot
-                ? "Lot record"
-                : "Your farm"
-              : "Your buying desk"}
-          </h3>
-          {role === "grower" ? (
-            lot ? (
-              <>
-                <Facts
-                  values={[
-                    ["Crop", lot.crop],
-                    ["Grade", lot.grade],
-                    ["Harvest", lot.harvest || "Not supplied"],
-                    ["Available", lot.quantity + " kg"],
-                    ["Asking price", money(lot.price) + "/kg"],
-                  ]}
-                />
-                <button onClick={() => go("listings", "lot", lot.id)}>
-                  View lot
-                </button>
-              </>
-            ) : (
-              <>
-                <p>
-                  Your farm profile is ready. Publish a harvest lot so buyers
-                  can find you.
-                </p>
-                <button onClick={() => farm && go("farms", "farm", farm.id)}>
-                  Complete farm profile
-                </button>
-              </>
-            )
-          ) : (
-            <>
-              <Facts
-                values={[
-                  ["Open offers", pending],
-                  ["Orders underway", active.length],
-                  ["Next pickup", active.at(-1)?.pickup || "Nothing scheduled"],
-                ]}
-              />
-              <button onClick={() => go("orders")}>Your orders</button>
-              <button onClick={() => go("farmers")}>Find growers</button>
-            </>
-          )}
-        </article>
-      </div>
-      <div className="overview-bottom">
-        <button
-          className="grower-caption"
-          onClick={() =>
-            role === "grower" && farm
-              ? go("farms", "farm", farm.id)
-              : origin && go("farmers", "farm", origin.id)
-          }
-        >
-          <span className="avatar">{user.name[0]}</span>
-          <span>
-            <strong>{role === "grower" ? farm?.person : user.name}</strong>
-            <small>
-              {role === "grower" ? farm?.name : user.organization} ·{" "}
-              {user.location}
-            </small>
-          </span>
-          {role === "grower" && (
-            <span className="profile-label">Farm profile</span>
-          )}
-        </button>
-        <Button variant="outline" onClick={() => go("offers")}>
-          {pending}{" "}
-          {role === "grower" ? "incoming offers" : "offers to follow up"}
-        </Button>
-      </div>
-    </section>
-  );
-}
 function Catalogue({ data, go }: { data: State; go: Go }) {
   const [search, setSearch] = useState(""),
     [category, setCategory] = useState(""),
@@ -808,22 +670,34 @@ function Catalogue({ data, go }: { data: State; go: Go }) {
     [max, setMax] = useState(""),
     [quality, setQuality] = useState(false),
     [filters, setFilters] = useState(false),
+    [tradeOnly, setTradeOnly] = useState(false),
+    [sort, setSort] = useState("grower"),
     deferred = useDeferredValue(search);
-  const list = data.listings.filter((l) => {
-    const farm = data.farms.find((f) => f.id === l.farm)!;
-    return (
-      l.open &&
-      l.quantity > 0 &&
-      (!deferred ||
-        (l.crop + " " + farm.name)
-          .toLowerCase()
-          .includes(deferred.toLowerCase())) &&
-      (!category || l.category === category) &&
-      (!region || farm.location.toLowerCase().includes(region.toLowerCase())) &&
-      (!max || l.price <= Number(max)) &&
-      (!quality || l.quality.startsWith("Sample"))
+  const list = data.listings
+    .filter((l) => {
+      const farm = data.farms.find((f) => f.id === l.farm)!;
+      return (
+        l.open &&
+        l.quantity > 0 &&
+        (!tradeOnly || !l.sample) &&
+        (!deferred ||
+          (l.crop + " " + farm.name)
+            .toLowerCase()
+            .includes(deferred.toLowerCase())) &&
+        (!category || l.category === category) &&
+        (!region ||
+          farm.location.toLowerCase().includes(region.toLowerCase())) &&
+        (!max || l.price <= Number(max)) &&
+        (!quality || l.quality.startsWith("Sample"))
+      );
+    })
+    .sort((a, b) =>
+      sort === "price"
+        ? a.price - b.price
+        : sort === "quantity"
+          ? b.quantity - a.quantity
+          : Number(a.sample) - Number(b.sample),
     );
-  });
   const active =
     Number(!!category) + Number(!!region) + Number(!!max) + Number(quality);
   return (
@@ -861,7 +735,23 @@ function Catalogue({ data, go }: { data: State; go: Go }) {
       </div>
       <div className="results-count">
         {list.length} available {list.length === 1 ? "lot" : "lots"}
-        <span>Asking prices per kilogram</span>
+        <label className="trade-only">
+          <input
+            type="checkbox"
+            checked={tradeOnly}
+            onChange={(e) => setTradeOnly(e.target.checked)}
+          />{" "}
+          Ready to trade
+        </label>
+        <select
+          aria-label="Sort produce"
+          value={sort}
+          onChange={(e) => setSort(e.target.value)}
+        >
+          <option value="grower">Grower listings first</option>
+          <option value="price">Lowest price / kg</option>
+          <option value="quantity">Most available</option>
+        </select>
       </div>
       <div className="lot-grid" id="lot-grid">
         {list.map((l) => (
@@ -907,7 +797,7 @@ function Catalogue({ data, go }: { data: State; go: Go }) {
               id="filter-location"
               value={region}
               onChange={(e) => setRegion(e.target.value)}
-              placeholder="e.g. Nashik"
+              placeholder="e.g. Chevella, Telangana"
             />
             <Label htmlFor="filter-max">Maximum asking price (₹/kg)</Label>
             <Input
@@ -1164,7 +1054,7 @@ function Market({ data }: { data: State }) {
             </select>
           </div>
           <div className="chart-periods">
-            {[7, 30].map((n) => (
+            {[7, 10].map((n) => (
               <button
                 key={n}
                 aria-pressed={period === n}

@@ -6,7 +6,7 @@ body,
 #root {
   margin: 0;
   min-height: 100%;
-  font-family: Geist, Arial, sans-serif;
+  font-family: Montreal, Arial, sans-serif;
 }
 body {
   background: #253421;
@@ -162,7 +162,7 @@ label {
   overflow: hidden;
   background:
     linear-gradient(90deg, #1c2c1ae8 0%, #293c23a6 42%, #24341b12 85%),
-    url("/assets/greenhouse-workspace.png") center/cover;
+    linear-gradient(135deg, #29392b, #1c2c23);
 }
 .app-sidebar {
   height: 100%;
@@ -1384,7 +1384,7 @@ label {
   min-height: 100dvh;
   background:
     linear-gradient(130deg, #20351be6, #21321cee),
-    url("/assets/greenhouse-workspace.png") center/cover fixed;
+    linear-gradient(135deg, #29392b, #1c2c23);
   padding: 24px;
 }
 .trace-page > header {
