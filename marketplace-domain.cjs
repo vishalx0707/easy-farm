@@ -152,4 +152,23 @@ function traceState(db,key){
   const {owner,...farm}=find(db.farms,order.farm,'Farm');
   return {farms:[farm],listings:[],offers:[],orders:[record],history:db.history.filter(h=>h.order===key)};
 }
-module.exports={seed,apply,ensureFarm,visibleState,traceState};
+function portalUser(db,identity){
+  db.profiles||=[];
+  const profile=db.profiles.find(p=>p.clerkId===identity.clerkId);
+  if(profile)return {...profile,name:identity.name,email:identity.email};
+  // Legacy accounts can be linked only by the verified Google provider subject
+  // AND matching verified email, never by email alone or client metadata.
+  const legacy=db.profiles.find(p=>!p.clerkId&&p.googleSubject&&p.googleSubject===identity.googleSubject&&p.email===identity.email);
+  if(legacy){legacy.clerkId=identity.clerkId;return {...legacy,name:identity.name,email:identity.email};}
+  return {id:identity.clerkId,clerkId:identity.clerkId,name:identity.name,email:identity.email,role:'pending',organization:'',location:''};
+}
+function completeProfile(db,identity,values){
+  const user=portalUser(db,identity);
+  requireThat(user.role==='pending','This account already has a portal.');
+  requireThat(['buyer','grower'].includes(values?.role),'Choose a buyer or grower portal.');
+  const organization=text(values.organization,'farm or business name'),location=text(values.location,'location');
+  requireThat(organization.length<=100&&location.length<=100,'Use a maximum of 100 characters for your farm/business name and location.');
+  const profile={...user,role:values.role,organization,location,googleSubject:identity.googleSubject};
+  db.profiles.push(profile);ensureFarm(db,profile);return profile;
+}
+module.exports={seed,apply,ensureFarm,visibleState,traceState,portalUser,completeProfile};

@@ -1,6 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "easyfarm",
+  "account_id": "8a6b26378875b6acc2d740e4c59d5ed0",
   "main": "worker.mjs",
   "compatibility_date": "2026-11-26",
   "compatibility_flags": ["nodejs_compat"],

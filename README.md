@@ -1,86 +1,80 @@
-# EasyFarm local marketplace
+# EasyFarm
 
-Use Node 24 or later. Run `npm install` and `npm start`, then open http://127.0.0.1:3000/login.
-The landing page, HeroLoop media and `/film-script` page are separate and preserved.
+A local B2B farm marketplace with separate buyer and grower portals, Google-only Clerk authentication and Cloudflare Workers hosting support. Use Node 24 or later.
 
-## Glass workspace revision
+```powershell
+npm install
+npm start
+```
 
-The app now uses a single viewport frame with translucent olive acrylic surfaces, a cream lot record, restrained lime actions, simple line icons and no decorative action arrows. Longer catalogue and order views scroll inside the workspace. Phones have a separate persistent bottom bar with five labelled icons: Home, Crops/Produce, Offers, Orders and Messages. The desktop keeps its sidebar. This takes the simple app navigation idea from Cal AI and adapts it to farm trading. The marketing page and its footage are unchanged.
+Open [EasyFarm sign-in](http://127.0.0.1:3000/login). The marketing landing page, HeroLoop footage and `/film-script` page are preserved.
 
-The built-in ImageGen tool created `assets/greenhouse-workspace.png`. Prompt: “Wide editorial greenhouse photograph; male grower in muted olive shirt and faded brown cap on the right inspecting a red bell pepper; defocused olive foliage and greenhouse structure on the left for interface content; natural daylight; documentary realism; no text, UI, logos or watermark.” This is illustrative generated background photography, not a photograph of a listed farm.
+## Authentication
 
-## Cloudflare hosting
+The workspace is linked to the connected Clerk **development** application. Google is enabled; email sign-in, email sign-up and passwords are disabled in that instance. The tracked `clerk-config.json` documents these settings without credentials. There is no shipped demo login or alternative password endpoint.
 
-This project is prepared for **Cloudflare Workers**, with static assets and a SQLite-backed Durable Object. The Node and Cloudflare servers use the same `marketplace-domain.cjs` rules. The Cloudflare database is persistent storage, not an ephemeral Worker filesystem. One object coordinates this demo marketplace's inventory and orders; a separate marketplace name would receive a separate object.
+Local keys live in the ignored `.dev.vars` file. To provision another checkout, link the intended Clerk app and pull its development keys:
 
-- `npm run build` creates `dist/` with browser assets only.
-- `npm run dev:cloudflare` creates an ignored local sign-in secret if needed, then runs the app at http://127.0.0.1:8787 with persistent local Cloudflare storage in `.wrangler/local`.
-- `npm run check:cloudflare` bundles the Worker and checks deployment packaging without deploying.
-- `npm run deploy` deploys to the account authenticated with Wrangler. No remote deployment has been performed.
+```powershell
+npx -y clerk@latest link --app YOUR_APP_ID
+npx -y clerk@latest env pull --file .dev.vars --instance dev
+```
 
-`wrangler.jsonc` includes the asset binding, Durable Object binding and SQLite migration. Cloudflare provisions that object namespace on the first deployment. Deploying starts with a separate seeded database; it does not upload the private Node database. The optimized HeroLoop films are included. Downloaded raw source footage remains intact locally and is excluded from the repository and deployment bundle. No Vercel or Netlify deployment configuration is included.
+The required variables are `CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`; see `.dev.vars.example`. Node reads `.dev.vars` and `.env.local`, with existing process variables taking precedence. Wrangler reads `.dev.vars`. Restart the server after changing keys. The CLI doctor checks `.env.local` rather than `.dev.vars`, so its missing-env warning alone does not mean this app lacks keys.
 
-Before a remote deployment, configure a strong `BETTER_AUTH_SECRET` with Wrangler's secret command. Local `.dev.vars` secrets are not uploaded automatically. Hosted authentication fails closed with a 503 response if the secret is missing. Authentication tables are migrated automatically on startup. No remote deployment has been performed.
+Clerk's browser SDK handles Google authorization, callback, session refresh and sign-out. The API validates the SDK's bearer session token using `@clerk/backend`, restricts its authorized party to the request origin, checks that the remote session is active and requires a Google-linked account with a verified primary email. Browser role values and Clerk user metadata never grant marketplace permissions. Only the publishable key is returned to the browser.
 
-## Google sign-in setup
+New users complete their farm/business name, location and buyer/grower role after Google returns. That role is assigned once in the marketplace database. Returning accounts open their assigned portal even when entering through the other portal's login screen. `/buyer` and `/grower` share inventory while private offers, conversations, orders and history remain scoped to their participants.
 
-Google is the only sign-in method. Email/password registration, sign-in and their forms are disabled. Actual Google OAuth credentials have **not** been configured in this workspace, so the Google button shows a clear unavailable state until connected.
+The development instance uses Clerk's shared Google development credentials. A production release requires a Clerk production instance, an owned domain and production Google OAuth configuration in Clerk. No production auth instance or hosted release has been configured. Clerk's Google redirect opens successfully; completion with a real Google account is a separate manual check and is not established by the fixture tests below.
 
-1. Create a **Web application** OAuth client in Google Cloud Console and configure its consent screen/test users as appropriate.
-2. Register exact authorized redirect URIs for each origin you use:
-   - `http://127.0.0.1:3000/api/auth/callback/google`
-   - `http://localhost:3000/api/auth/callback/google` if using localhost
-   - `http://127.0.0.1:8787/api/auth/callback/google` for local Cloudflare
-   - `https://YOUR-HOST/api/auth/callback/google` for a hosted deployment
-3. Add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` to the ignored `.dev.vars` file alongside the existing `BETTER_AUTH_SECRET`, then restart Node or Wrangler. `.dev.vars.example` shows variable names with placeholders; keep the existing generated signing secret. Node also accepts these variables directly from its environment.
-4. For hosting, configure all three variables using Cloudflare secrets. `.dev.vars` is local and is not deployed. No secret values belong in Git or browser JavaScript.
+## Cloudflare
 
-The provider uses the current request origin for its OAuth callback. Origins and redirect URIs must match exactly. Better Auth performs the authorization-code exchange and validates OAuth state. This app does not fake a successful Google sign-in when credentials are absent. Google selects the account; first-time users then complete their portal/farm/business profile. Returning users keep their existing role.
+The project is configured for the connected Cloudflare account in `wrangler.jsonc`. It uses Workers Static Assets plus a SQLite-backed Durable Object. The Node and Worker backends share `marketplace-domain.cjs` and the authenticated API service. One object coordinates this demo marketplace, serializing stock reservation and keeping persistent profiles and trade records.
 
-The full browser trade suite also passed in Wrangler's local Workers runtime at 1440, 390 and 360 pixels, including real PNG QR decode, simulated payment, touch navigation and reduced-height messaging. A dry-run build alone is not treated as runtime verification. Cloudflare uses the public host in trace URLs after deployment; local loopback QR links require the local computer.
+- `npm run build` copies browser assets into `dist/`, excluding credentials, databases, server source and raw footage.
+- `npm run dev:cloudflare` runs at [127.0.0.1:8787](http://127.0.0.1:8787/login) with persistent local storage in `.wrangler/local`.
+- `npm run check:cloudflare` validates packaging without deploying.
+- `npm run deploy` is the explicit remote deployment command. It has not been run.
 
-## Buyer and grower portals
+Local `.dev.vars` files are not uploaded automatically. Before an authorized deployment, provision the intended instance's Clerk keys securely as Worker secrets and configure its application domain. Missing keys cause protected APIs to fail closed. The SQLite migration and binding are tracked. First deployment initializes a separate seeded marketplace; it does not upload the private Node database. No Netlify configuration is included.
 
-Start at `/login?portal=buyer` or `/login?portal=grower` and choose **Continue with Google**. New Google accounts are initially pending and cannot access marketplace actions. After Google returns, users choose their buyer/grower portal and enter their business/farm name and location. The server assigns that role once, using an atomic conditional update. Returning accounts go straight to their existing portal, including when someone enters through the other portal's sign-in screen. The account button opens account details and sign-out; there is no role-switch control.
+## Portals and presentation
 
-- `/buyer`: produce discovery, farm profiles, the buyer's own offers/conversations, purchases, payment status and delivery tracking. The home screen shows a buying desk with open offers, active orders and the next pickup.
-- `/grower`: an owned farm created from registration, harvest publishing, incoming buyer offers, buyer business identities, negotiation, sales orders and fulfillment. The home screen starts with the grower's farm and harvest rather than produce sourcing. The farm selector contains only that account's farms; “Manage farms” allows additional owned profiles.
-- Phone navigation remains role-specific: Home, Crops/Produce, Offers, Orders and Messages. The desktop retains its sidebar. Detail URLs and sessions survive reload.
+The workspace follows `design/app-references/01-primary-ui.png`: translucent olive acrylic surfaces, cream lot records, restrained lime actions and quiet line icons. Desktop uses a persistent sidebar; phone layouts use five labelled bottom icons for Home, Crops/Produce, Offers, Orders and Messages. Catalogue and order views scroll within the workspace. Forms, filters, messaging and delivery timelines support narrow phone screens.
 
-Better Auth handles Google OAuth, signed HttpOnly session cookies, sign-out and persistent database rate limits. Sessions last seven days. The server derives identity/role from the session and checks farm ownership and trade participation for every write. State responses contain only the signed-in account's private offers, messages, orders and history; public produce and farm profiles are shared for discovery. Changing a query string or submitting a different role does not grant access. The account role cannot be changed after profile completion.
+- Growers manage farm profiles, publish harvest lots, compare incoming offers, negotiate, accept orders and update delivery milestones.
+- Buyers search/filter produce, view farms and lot terms, submit offers, negotiate, message and track purchases.
+- Accepted offers reserve stock once. Delivery progresses through Accepted, Packed, Ready for pickup, Picked up and Delivered.
+- Quantity, price per kg, totals and pickup terms are saved with each trade. Public read-only QR traces include lot/order details and ordinary event history, omitting buyer identities and private conversations.
 
-Google supplies identity and its email-verification status. App-managed password reset, password sign-in and multifactor authentication are not enabled. Existing local users, stored credentials and marketplace data remain intact; existing sessions are not forcibly revoked. There are no shipped demo credentials. Sign-in with a real Google account remains unverified until OAuth credentials are connected and the complete provider exchange is exercised.
+`assets/greenhouse-workspace.png` is generated illustrative photography, not a photograph of a listed farm. Its ImageGen prompt described an editorial greenhouse photograph with an olive-shirted grower inspecting a red pepper on the right and defocused foliage on the left, with natural light and no text/UI. Seed farms and prices are labelled samples. Produce photos are representative rather than evidence of lot quality.
 
-Seeded profiles and unowned legacy listings remain preserved as labelled samples, viewable by buyers but unavailable for real offers. New grower accounts do not inherit other farms or legacy private records. Photography represents farms and produce rather than verifying an individual lot.
+## Storage and integration status
 
-## Persistence and integrations
+- Node persists marketplace data atomically in `.easyfarm/market.json`. `EASYFARM_DATA_DIR` selects another directory. Writes are serialized; existing records are retained.
+- Cloudflare persists the same profile and trade records in Durable Object SQLite storage. Clerk owns identities and sessions; its private signing keys are never stored in the marketplace database.
+- Older account databases are retained read-only. Previously verified Google accounts can retain their original ownership IDs only when both verified email and Google provider subject match. Email alone cannot claim a legacy account. Old password sessions do not authenticate through Clerk.
+- QR images are real, decodable PNG QR codes. Local QR URLs require access to the local computer; hosted URLs use the request origin.
+- Payments are explicitly simulated; no processor is connected and no money moves.
+- Quality is grower-declared or labelled as a simulated sample check. No external inspection or certification service is connected.
+- Market charts use illustrative values. No live price feed, carrier, dispatch, push notification or external messaging provider is connected.
+- Blockchain is excluded. History uses ordinary persistent records.
 
-- Listings, farm profiles, offers, messages, accepted orders, delivery events and sample payment status are saved atomically in `.easyfarm/market.json`. Set `EASYFARM_DATA_DIR` to use a separate database. Actions are serialized to prevent double stock reservation. Existing saved records are retained.
-- Local accounts and sessions are stored in `.easyfarm/accounts.sqlite`; the generated local signing secret is stored in `.easyfarm/auth-secret`. Cloudflare stores authentication tables alongside market data in its SQLite-backed Durable Object. Database files, secrets and QA fixtures are excluded from Git and the static build.
-- Accepted offers reserve stock immediately. Orders progress through Accepted → Packed → Ready for pickup → Picked up → Delivered. Order history is ordinary persisted event data.
-- QR images are real QR codes encoding a public read-only order trace URL. Trace responses omit buyer identity and private messages. They include farm, crop, harvest date if supplied, grade, quality declaration, agreed terms, payment status and event history. Newly created lot/offer/order IDs use full random UUIDs. The local Node server binds to loopback; a physical phone cannot reach it without additional network setup.
-- Payments are explicitly simulated. No payment processor is connected and no money moves.
-- Quality is grower-declared unless a simulated sample check is recorded. No external inspector, certification provider or sensor is connected.
-- Market charts use labelled illustrative sample values, not a live market feed.
-- Messages are saved locally. No external messaging provider, push notification, carrier or dispatch integration is connected.
-- No blockchain integration, hash-chain verification or blockchain UI remains. Older event records are converted to ordinary order history when read, retaining event details.
+Credentials, private databases, `.clerk`, `.wrangler`, build output and QA records are ignored by Git. Optimized runtime footage is versioned; original downloaded footage stays local.
 
 ## Verification
 
-Install dev dependencies and Chrome. In one terminal start an isolated server:
-
 ```powershell
-$env:EASYFARM_PORT='3002'
-$env:EASYFARM_DATA_DIR='C:/dev/easy farm/.easyfarm-auth-test'
-node server.js
+npm run test:auth
+npm run test:browser
+npm run test:worker
 ```
 
-In another terminal run `npm run test:browser`. It uses port 3002 by default. The test-only `tools/auth-fixture.cjs` creates isolated users and signed session fixtures directly in the local test SQLite database to stand in for Google's completed callback. It is not served as an HTTP route or imported by the application. The suite then exercises the real profile-completion endpoint and marketplace. These fixtures do **not** test Google's network exchange. Set `EASYFARM_TEST_DATA_DIR` if changing the isolated Node database location. No production database or remote target is permitted for fixtures. Screenshots and results are saved under `design/qa-*.png` and `design/verification-results.json`.
+`test:auth` uses the real Clerk backend SDK with a generated RSA test key, isolated fake provider records and an ephemeral test server. It verifies signature rejection, expiry, origin binding, session revocation, one-time profile completion, CSRF checks, disabled legacy auth endpoints, persistence round-trip and strict legacy Google account matching. Fixtures are never imported by the running application or served as endpoints.
 
-For manual Cloudflare QA, use a separate storage directory: run `node tools/dev-secret.cjs`, `npm run build`, then `npx wrangler dev --port 8788 --persist-to .wrangler/auth-tests`. Configure real Google credentials and its exact callback URI before signing in. The direct SQLite fixture harness supports Node only. Keep QA accounts and produce out of the normal local marketplace.
+`test:browser` starts its own isolated server. It uses signed fixture tokens and a mocked browser Clerk session to test the actual app/API at 1440, 390 and 360 pixels: profile completion, portal routing, harvest publishing, buyer discovery, offer, messages, counteroffers, acceptance, delivery, simulated payment, reload, QR decode, sign-out and returning-session routing. It checks account isolation, role spoofing rejection, single stock reservation, mobile navigation, overflow and reduced-height messaging. Callback tests ensure EasyFarm preserves Clerk's provider-return parameters. Screenshots and results are written under `design/qa-*.png` and `design/verification-results.json`.
 
-Current Google-only revision: the UI was reviewed at 1440, 390 and 360 pixels; there are no email/password inputs, and missing Google configuration disables sign-in honestly. `npm run test:google` checks a Google authorization redirect with dummy provider credentials, state cookies, callback URI, invalid-state rejection, disabled email/password endpoints, missing-credentials response and one-time portal completion. It uses an in-memory isolated database and does not contact Google to sign in.
+`test:worker` bundles the actual Worker and runs it in Cloudflare's local workerd/Miniflare runtime with SQLite persistence isolated under `.wrangler/worker-fixtures`. It tests profile ownership, trade, messaging, single stock reservation, payment/delivery records, public trace privacy, QR decoding and persistence after the runtime restarts. Internal RPC receives fixture identities, so this validates Worker storage/domain behavior rather than the Google exchange.
 
-The Node browser suite passed at all three widths using isolated session fixtures: profile completion → portal routing → publishing → buyer discovery → offer → messages → counteroffers → acceptance → delivery milestones → simulated payment → reload → QR decode → sign-out → returning-session routing. Stock decreased once, and browsers reported no JavaScript errors. Phone navigation and reduced-height messaging passed. The preceding email/password revision was also tested in Cloudflare's local runtime; that historical result does not establish a completed Google OAuth exchange.
-
-Separate buyer and grower fixture accounts were unable to see private trade records, message another trade, edit another farm, pay another order or update its delivery. A buyer submitting a forged grower role remained a buyer. Public trace records exposed no buyer identity or messages. `tools/check-session.cjs prepare|verify <url>` supports isolated Node session restart/replay checks. Real Google account consent, token exchange and provider account linking remain to be tested with configured credentials.
+All three suites passed for this revision. The actual Clerk browser SDK also loaded at desktop and phone sizes, and its Google button reached Google's authorization screen. The automated suites do not establish real Google account consent, callback exchange or production deployment. Complete the manual Google login on the regular local server to verify that last provider-dependent step.

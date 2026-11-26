@@ -19,7 +19,7 @@ const types = {
   ".woff2": "font/woff2"
 };
 
-const server = createServer(async (request, response) => {
+function createAppServer(api = marketplaceApi) { return createServer(async (request, response) => {
   let pathname;
   try {
     pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
@@ -27,7 +27,7 @@ const server = createServer(async (request, response) => {
     response.writeHead(400).end();
     return;
   }
-  if (pathname.startsWith("/api/")) return marketplaceApi(request, response, pathname);
+  if (pathname.startsWith("/api/")) return api(request, response, pathname);
   if (!["GET", "HEAD"].includes(request.method)) {
     response.writeHead(405, { Allow: "GET, HEAD" }).end();
     return;
@@ -36,7 +36,7 @@ const server = createServer(async (request, response) => {
   const file = resolve(root, "." + page);
   const type = types[extname(file)];
   if (!file.startsWith(root + sep) || !type ||
-      !["/index.html", "/film-script.html", "/app.html", "/app.js", "/app.css", "/login.html", "/login.js", "/login.css", "/landing.js", "/landing.css", "/EasyFarm Footage.html", "/Antigravity Footage.html"].includes(page) &&
+      !["/index.html", "/film-script.html", "/app.html", "/app.js", "/app.css", "/auth-client.js", "/login.html", "/login.js", "/login.css", "/landing.js", "/landing.css", "/EasyFarm Footage.html", "/Antigravity Footage.html"].includes(page) &&
       !pathname.startsWith("/assets/") && !pathname.startsWith("/hero-footage/")) {
     response.writeHead(404).end();
     return;
@@ -74,6 +74,7 @@ const server = createServer(async (request, response) => {
   stream.on("error", () => response.destroy());
   response.on("close", () => stream.destroy());
   stream.pipe(response);
-});
+}); }
 
-server.listen(port, host, () => console.log(`EasyFarm running at http://${host}:${port}`));
+if(require.main===module)createAppServer().listen(port,host,()=>console.log(`EasyFarm running at http://${host}:${port}`));
+module.exports={createAppServer};

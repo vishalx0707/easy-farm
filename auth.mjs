@@ -1,32 +1,29 @@
-import { betterAuth } from 'better-auth';
-import { APIError } from 'better-auth/api';
+import {createClerkClient} from '@clerk/backend';
 
-export function createAuth(database, { origin, secret, googleClientId, googleClientSecret }) {
-  if (!secret || secret.length < 32) throw new Error('Configure BETTER_AUTH_SECRET before enabling sign-in.');
-  return betterAuth({
-    appName: 'EasyFarm', baseURL: origin, secret, database,
-    emailAndPassword: { enabled: false },
-    socialProviders: googleClientId && googleClientSecret ? {
-      google: { clientId: googleClientId, clientSecret: googleClientSecret, prompt: 'select_account' }
-    } : {},
-    session: { expiresIn: 60 * 60 * 24 * 7, updateAge: 60 * 60 * 24, cookieCache: { enabled: false } },
-    user: { additionalFields: {
-      role: { type: ['pending', 'buyer', 'grower'], required: false, defaultValue: 'pending', input: false },
-      organization: { type: 'string', required: false, defaultValue: '', input: false },
-      location: { type: 'string', required: false, input: true }
-    } },
-    databaseHooks: { user: {
-      create: { before: async user => {
-        // Google supplies identity; the account's portal is assigned exactly once
-        // by the authenticated profile-completion endpoint after OAuth returns.
-        return { data: { ...user, role: 'pending', organization: '', location: '' } };
-      } },
-      update: { before: async user => {
-        if ('role' in user) throw new APIError('FORBIDDEN', { message: 'An account’s portal cannot be changed. Sign in to the appropriate account.' });
-        return { data: user };
-      } }
-    } },
-    rateLimit: { enabled: true, window: 60, max: 30, storage: 'database' },
-    advanced: { cookiePrefix: 'easyfarm', ipAddress: { ipAddressHeaders: ['cf-connecting-ip'] }, database: { generateId: 'uuid' } }
-  });
+export function createAuth(config, providedClient) {
+  const publishableKey=config.CLERK_PUBLISHABLE_KEY||config.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY||'';
+  const secretKey=config.CLERK_SECRET_KEY||'';
+  const configured=Boolean(publishableKey&&secretKey);
+  const client=providedClient||(configured?createClerkClient({publishableKey,secretKey,jwtKey:config.CLERK_JWT_KEY}):null);
+  return {
+    configured,
+    publicConfig:{provider:'clerk',publishableKey,google:configured},
+    async identity(request){
+      if(!configured)return null;
+      // API traffic uses the SDK's short-lived session token, not a user ID,
+      // metadata role, legacy cookie or browser-provided profile.
+      if(!request.headers.get('Authorization')?.startsWith('Bearer '))return null;
+      const origin=new URL(request.url).origin;
+      const state=await client.authenticateRequest(request,{authorizedParties:[origin],acceptsToken:'session_token'});
+      if(!state.isAuthenticated)return null;
+      const {userId,sessionId}=state.toAuth();
+      if(!userId||!sessionId)return null;
+      const [user,session]=await Promise.all([client.users.getUser(userId),client.sessions.getSession(sessionId)]);
+      if(session.status!=='active'||session.userId!==userId)return null;
+      const google=user.externalAccounts.find(account=>account.provider==='oauth_google');
+      const primary=user.emailAddresses.find(email=>email.id===user.primaryEmailAddressId);
+      if(!google||primary?.verification?.status!=='verified')return null;
+      return {clerkId:user.id,email:primary.emailAddress.toLowerCase(),name:[user.firstName,user.lastName].filter(Boolean).join(' ')||user.username||'EasyFarm member',googleSubject:google.providerUserId};
+    }
+  };
 }

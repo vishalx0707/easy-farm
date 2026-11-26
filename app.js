@@ -43,7 +43,7 @@ function notice(message, error = false) {
   box.classList.toggle("error", error);
 }
 async function read() {
-  const result = await fetch(batch?'/api/trace/'+encodeURIComponent(batch):'/api/state');
+  const result = await (batch?fetch:window.EasyFarmAuth.fetch)(batch?'/api/trace/'+encodeURIComponent(batch):'/api/state');
   if(result.status===409){location.replace('/login?portal='+requestedPortal+'&finish=1');throw Object.assign(Error('Complete your profile.'),{redirect:true});}
   if(result.status===401){location.replace('/login?portal='+(data?.user?.role||requestedPortal));throw Object.assign(Error('Sign in to continue.'),{redirect:true});}
   if (!result.ok) throw Error("Could not load the marketplace.");
@@ -59,7 +59,7 @@ async function mutate(action, values = {}) {
   busy = true;
   qs("#save-editor").disabled = true;
   try {
-    const response = await fetch("/api/action", {
+    const response = await window.EasyFarmAuth.fetch("/api/action", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ farm: state.farm, ...values, action })
     });
@@ -447,6 +447,6 @@ window.addEventListener("focus", async () => {
 qs('#close-account').addEventListener('click',()=>qs('#account-dialog').close());
 qs('#sign-out').addEventListener('click',async()=>{
   qs('#sign-out').disabled=true;
-  try{const result=await fetch('/api/auth/sign-out',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});if(!result.ok)throw Error('Could not sign out. Try again.');location.replace('/login?portal='+state.role);}
+  try{await window.EasyFarmAuth.signOut(state.role);}
   catch(error){notice(error.message,true);qs('#account-dialog').close();qs('#sign-out').disabled=false;}
 });

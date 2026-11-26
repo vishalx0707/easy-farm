@@ -1,0 +1,5 @@
+{
+  "auth_email": { "used_for_sign_in": false, "used_for_sign_up": false, "required_for_sign_up": false, "sign_in_strategies": [] },
+  "auth_password": { "enabled": false, "required": false },
+  "connection_oauth_google": { "enabled": true, "authenticatable": true }
+}

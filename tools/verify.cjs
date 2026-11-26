@@ -3,17 +3,35 @@ const {PNG}=require('pngjs');
 const decode=require('jsqr');
 const fs=require('fs');
 const assert=require('assert/strict');
-const base=process.env.TEST_URL||'http://127.0.0.1:3002';
-const fixture=require('./auth-fixture.cjs');
+let base;
+let testServer;
 const results=[];
 async function main(){
+ testServer=await require('./clerk-fixtures.cjs')();base=testServer.base;
  const browser=await chromium.launch({channel:'chrome',headless:true});
  try{
+  // Our shell must leave Clerk's provider-return parameters for the SDK.
+  const callbackContext=await browser.newContext();
+  await callbackContext.addInitScript(()=>{window.Clerk={load:async()=>{},session:null,handleRedirectCallback:async options=>{window.callbackObserved={url:location.href,options};},mountSignUp:()=>{window.continuationObserved=location.href;}};});
+  const callbackPage=await callbackContext.newPage();
+  await callbackPage.goto(base+'/login?portal=grower&callback=1&__clerk_status=verified&__clerk_created_session=session-fixture');
+  await callbackPage.waitForFunction(()=>window.callbackObserved);
+  const callback=await callbackPage.evaluate(()=>window.callbackObserved);
+  assert.equal(new URL(callback.url).searchParams.get('__clerk_created_session'),'session-fixture');
+  assert.equal(new URL(callback.url).searchParams.get('__clerk_status'),'verified');
+  assert.equal(callback.options.signUpForceRedirectUrl,'/login?portal=grower&finish=1');
+  await callbackPage.goto(base+'/login?portal=buyer&continue=1&__clerk_ticket=ticket-fixture');
+  await callbackPage.waitForFunction(()=>window.continuationObserved);
+  assert.equal(new URL(await callbackPage.evaluate(()=>window.continuationObserved)).searchParams.get('__clerk_ticket'),'ticket-fixture');
+  await callbackContext.close();
   for(const width of [1440,390,360]){
    const suffix=width+'-'+Date.now(),crop='QA portal peppers '+suffix;
    const errors=[];
    async function person(role,label){
     const context=await browser.newContext({viewport:{width,height:width===1440?950:844},isMobile:width<600,hasTouch:width<600});
+    await context.addInitScript(()=>{
+      window.Clerk={load:async()=>{},get session(){const token=localStorage.getItem('qa_clerk_token');return token?{getToken:async()=>token}:null;},signOut:async({redirectUrl})=>{localStorage.removeItem('qa_clerk_token');location.replace(redirectUrl);}};
+    });
     const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
     return {context,page,role,email:label+'-'+suffix+'@example.test',name:label==='grower'?'Maya Test':'Arjun Test',organization:label==='grower'?'QA Valley Farm '+width:'QA Fresh Market '+width};
    }
@@ -22,8 +40,10 @@ async function main(){
    async function go(person,view='overview',detail){await person.page.goto(base+'/'+person.role+'?view='+view+(detail?'&type='+detail.type+'&detail='+detail.id:''));await loaded(person.page);}
    async function register(person){
     const p=person.page;
-    await person.context.request.get(base+'/api/auth/ok');
-    await person.context.addCookies([await fixture(base,person)]);
+    person.token=testServer.tokenFor(person);
+    await person.context.setExtraHTTPHeaders({Authorization:'Bearer '+person.token});
+    await p.goto(base+'/login?portal='+person.role);
+    await p.evaluate(token=>localStorage.setItem('qa_clerk_token',token),person.token);
     await p.goto(base+'/login?portal='+person.role+'&finish=1');
     await p.locator('#profile-form:not([hidden])').waitFor();
     await p.locator('[name="organization"]').fill(person.organization);await p.locator('[name="location"]').fill('Nashik');
@@ -31,8 +51,7 @@ async function main(){
     await p.waitForURL('**/'+person.role+'**');await loaded(p);
     assert.equal(await p.locator('body').getAttribute('data-portal'),person.role);
     assert.equal(await p.locator('[data-role]').count(),0);
-    assert((await person.context.cookies()).some(cookie=>cookie.name.includes('session_token')&&cookie.httpOnly));
-    assert(!(await p.evaluate(()=>document.cookie)).includes('session_token'));
+    assert.equal(await p.locator('input[type=password],input[type=email]').count(),0);
    }
    async function click(p,action){await p.locator('[data-action="'+action+'"]').first().click();}
    async function save(p){await p.locator('#save-editor').click();await p.locator('#editor').waitFor({state:'hidden'});}
@@ -68,11 +87,12 @@ async function main(){
    const trace=await(await publicApi.get(base+'/api/trace/'+orderId)).json();assert.equal(trace.orders[0].payment,'Paid (simulated)');assert(!trace.orders[0].buyer);assert(!trace.orders[0].buyerName);assert.equal(trace.offers.length,0);
    const tracePage=await outsider.newPage();tracePage.on('pageerror',e=>errors.push(e.message));await tracePage.goto(code.data);await loaded(tracePage);assert.equal(await tracePage.locator('[data-action="payment"]').count(),0);
    for(const role of ['buyer','grower']){
-    await outsider.addCookies([await fixture(base,{email:'outsider-'+role+'-'+suffix+'@example.test',name:'Other Account'})]);
+    const token=testServer.tokenFor({email:'outsider-'+role+'-'+suffix+'@example.test',name:'Other Account'});
+    await outsider.setExtraHTTPHeaders({Authorization:'Bearer '+token});
     const response=await publicApi.post(base+'/api/profile',{headers:{Origin:base},data:{organization:'Other '+role,location:'Pune',role}});assert.equal(response.status(),200);
     const view=await(await publicApi.get(base+'/api/state')).json();assert.equal(view.orders.length,0);assert.equal(view.offers.length,0);assert.equal(view.history.length,0);
     for(const body of [{action:'message',offer:offerId,message:'Not permitted',farm:farmId},{action:'payment',order:orderId},{action:'order-status',order:orderId,status:'Packed',farm:farmId},{action:'farm',id:farmId,name:'Changed',person:'Changed',location:'Changed',bio:''}]){assert.equal((await publicApi.post(base+'/api/action',{headers:{Origin:base},data:body})).status(),400);}
-    await publicApi.post(base+'/api/auth/sign-out',{headers:{Origin:base},data:{}});
+    testServer.revoke(token);await outsider.setExtraHTTPHeaders({});
    }
    const spoof=await action(buyer,{role:'grower',action:'listing',farm:farmId,crop:'Forbidden',quantity:1,price:1,grade:'A',category:'Peppers',pickup:'Tomorrow'});assert.equal(spoof.status(),400);
    await buyer.context.request.post(base+'/api/auth/update-user',{headers:{Origin:base},data:{role:'grower'}});assert.equal((await state(buyer)).user.role,'buyer');
@@ -80,18 +100,23 @@ async function main(){
    const after=await state(grower);assert.equal(after.listings.find(l=>l.id===lotId).quantity,75);assert.equal(after.orders.find(o=>o.id===orderId).timeline.length,6);assert(!JSON.stringify(after).includes('password'));
    // OAuth session fixtures stand in for Google's callback; the actual provider
    // exchange requires real credentials and is checked separately/manual.
-   await gp.locator('#account-button').click();await gp.locator('#sign-out').click();await gp.waitForURL('**/login**');assert.equal((await grower.context.request.get(base+'/api/state')).status(),401);
-   await grower.context.addCookies([await fixture(base,grower)]);
+   await gp.route('**/api/auth/session',route=>route.fulfill({json:{user:null}}));
+   await gp.locator('#account-button').click();await gp.locator('#sign-out').click();await gp.waitForURL('**/login**');testServer.revoke(grower.token);assert.equal((await grower.context.request.get(base+'/api/state')).status(),401);
+   await gp.goto(base+'/');
+   await gp.unroute('**/api/auth/session');
+   grower.token=testServer.tokenFor(grower);await grower.context.setExtraHTTPHeaders({Authorization:'Bearer '+grower.token});
+   await gp.evaluate(token=>localStorage.setItem('qa_clerk_token',token),grower.token);
    await gp.goto(base+'/login?portal=buyer');await gp.waitForURL('**/grower**');await loaded(gp);await gp.reload();await loaded(gp);
    if(width<600){for(const person of [grower,buyer]){
     await go(person);const nav=person.page.locator('#mobile-nav');
     for(const key of ['overview',person.role==='grower'?'listings':'catalogue','offers','orders','messages']){await nav.locator('[data-nav="'+key+'"]').click();assert.equal(await nav.locator('[aria-current="page"]').getAttribute('data-nav'),key);await noOverflow(person.page,person.role+' '+key);}
     await person.page.locator('[data-action="offer-detail"]').first().click();await person.page.locator('#message-form input').focus();await person.page.setViewportSize({width,height:440});await noOverflow(person.page,'keyboard');await person.page.setViewportSize({width,height:844});
    }}
-   assert.deepEqual(errors,[]);results.push({width,lotId,offerId,orderId,authentication:'Isolated Google session fixture; real OAuth exchange not performed',portals:['buyer','grower'],qrDecoded:true,accountIsolation:true,spoofedRoleRejected:true,signOutAndReturningSession:true,remainingKg:75,consoleErrors:errors});
+   assert.deepEqual(errors,[]);results.push({width,lotId,offerId,orderId,authentication:'Clerk SDK verifies RSA-signed fixture tokens; user/session provider records and browser SDK are mocked',portals:['buyer','grower'],qrDecoded:true,accountIsolation:true,spoofedRoleRejected:true,signOutAndReturningSession:true,remainingKg:75,consoleErrors:errors});
    await outsider.close();await grower.context.close();await buyer.context.close();console.log('PASS '+width+'px authenticated trade and account isolation');
   }
+  await testServer.saveReload();
   fs.writeFileSync('design/verification-results.json',JSON.stringify({server:base,results},null,2));
- }finally{await browser.close();}
+ }finally{await browser.close();await testServer.close();}
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});
