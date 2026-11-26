@@ -6,12 +6,19 @@ const file='.easyfarm-auth-test/restart-'+new URL(base).port+'.json';
 (async()=>{
  if(process.argv[2]==='prepare'){
   const context=await request.newContext({extraHTTPHeaders:{Origin:base}});
-  const result=await context.post(base+'/api/auth/sign-up/email',{data:{email:'restart-'+Date.now()+'@example.test',password:'EasyFarmTest123!',name:'Restart Tester',role:'grower',organization:'Restart QA Farm',location:'Pune'}});
+  await context.get(base+'/api/auth/ok');
+  const cookie=await require('./auth-fixture.cjs')(base,{email:'restart-'+Date.now()+'@example.test',name:'Restart Tester'});
+  const {url,...storedCookie}=cookie;
+  const signed=await request.newContext({storageState:{cookies:[{...storedCookie,domain:new URL(base).hostname,path:'/',expires:-1,secure:false}],origins:[]},extraHTTPHeaders:{Origin:base}});
+  // APIRequestContext accepts cookies via storageState; browser cookie URLs
+  // are converted to the serialized cookie shape here.
+  await context.dispose();
+  const result=await signed.post(base+'/api/profile',{data:{role:'grower',organization:'Restart QA Farm',location:'Pune'}});
   assert.equal(result.status(),200);
-  const state=await(await context.get(base+'/api/state')).json();
+  const state=await(await signed.get(base+'/api/state')).json();
   fs.mkdirSync('.easyfarm-auth-test',{recursive:true});
-  fs.writeFileSync(file,JSON.stringify({storage:await context.storageState(),user:state.user.id,farm:state.farms.find(f=>f.owned).id}));
-  await context.dispose();console.log('Prepared isolated session restart check for '+base);
+  fs.writeFileSync(file,JSON.stringify({storage:await signed.storageState(),user:state.user.id,farm:state.farms.find(f=>f.owned).id}));
+  await signed.dispose();console.log('Prepared isolated session restart check for '+base);
  }else{
   const fixture=JSON.parse(fs.readFileSync(file,'utf8'));
   const context=await request.newContext({storageState:fixture.storage,extraHTTPHeaders:{Origin:base}});

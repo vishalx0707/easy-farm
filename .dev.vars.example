@@ -1,0 +1,4 @@
+# Copy values into the ignored .dev.vars file. Never commit real credentials.
+BETTER_AUTH_SECRET=replace-with-a-random-secret-of-at-least-32-characters
+GOOGLE_CLIENT_ID=your-web-oauth-client.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret

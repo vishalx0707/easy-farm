@@ -7,7 +7,8 @@
     "dev:cloudflare": "node tools/dev-secret.cjs && npm run build && wrangler dev --port 8787 --persist-to .wrangler/local",
     "check:cloudflare": "npm run build && wrangler deploy --dry-run",
     "deploy": "npm run build && wrangler deploy",
-    "test:browser": "node tools/verify.cjs"
+    "test:browser": "node tools/verify.cjs",
+    "test:google": "node tools/verify-google.mjs"
   },
   "engines": { "node": ">=24" },
   "dependencies": {

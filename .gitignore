@@ -4,6 +4,7 @@ node_modules/
 dist/
 .env*
 .dev.vars*
+!.dev.vars.example
 *.log
 design/qa-*.png
 design/verification-results.json

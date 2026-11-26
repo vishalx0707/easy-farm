@@ -1,39 +1,60 @@
 const $=selector=>document.querySelector(selector);
 const query=new URLSearchParams(location.search);
 let portal=query.get('portal')==='grower'?'grower':'buyer';
-let signup=query.get('mode')==='signup';
-let busy=false;
+let busy=false, onboarding=false, googleAvailable=false;
+function showError(copy){$('#auth-error').textContent=copy;$('#auth-error').hidden=false;}
 function renderAuth(){
-  const grower=portal==='grower';
-  document.querySelectorAll('[data-portal]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.portal===portal)));
-  $('#portal-label').textContent=(grower?'GROWER':'BUYER')+' PORTAL';
-  $('#auth-title').textContent=signup?(grower?'Your farm starts here.':'Better sourcing starts here.'):'Welcome back.';
-  $('#auth-description').textContent=signup?(grower?'Create your grower account, introduce your farm and list your first harvest.':'Create a business buyer account to meet growers and start trading.'):(grower?'Sign in to manage your farm, harvest and incoming offers.':'Sign in to source produce and manage your purchases.');
-  $('#registration-fields').hidden=!signup;
-  $('#registration-fields').querySelectorAll('input').forEach(input=>input.disabled=!signup);
-  $('#organization-label').textContent=grower?'Farm name':'Business name';
-  $('#auth-submit').textContent=signup?'Create '+(grower?'grower':'buyer')+' account':'Sign in to '+(grower?'grower':'buyer')+' portal';
-  $('#toggle-copy').textContent=signup?'Already have an account?':'New to EasyFarm?';
-  $('#toggle-auth').textContent=signup?'Sign in':'Create an account';
-  const password=$('[name="password"]');password.autocomplete=signup?'new-password':'current-password';password.minLength=signup?10:1;
-  $('#password-hint').hidden=!signup;$('#auth-error').hidden=true;
-  const url=new URL(location.href);url.searchParams.set('portal',portal);url.searchParams.set('mode',signup?'signup':'signin');history.replaceState(null,'',url);
-  document.title=(grower?'Grower':'Buyer')+' portal · EasyFarm';
+ const grower=portal==='grower';
+ document.querySelectorAll('[data-portal]').forEach(button=>{button.setAttribute('aria-pressed',String(button.dataset.portal===portal));button.disabled=busy;});
+ $('#portal-label').textContent=(grower?'GROWER':'BUYER')+' PORTAL';
+ $('#auth-title').textContent=onboarding?(grower?'Tell us about your farm.':'Tell us about your business.'):(grower?'Your harvest starts here.':'Your next connection.');
+ $('#auth-description').textContent=onboarding?'You’re signed in with Google. Set up your EasyFarm portal to get started.':(grower?'Sign in with Google to manage your farm, harvest and incoming offers.':'Sign in with Google to source produce and manage your purchases.');
+ $('#organization-label').textContent=grower?'Farm name':'Business name';
+ $('#google-signin').hidden=onboarding;$('#google-status').hidden=onboarding;
+ $('#google-signin').disabled=busy||!googleAvailable;
+ $('#profile-form').hidden=!onboarding;
+ $('#profile-submit').textContent=busy?'Opening your portal…':'Open '+portal+' portal';
+ $('#profile-submit').disabled=busy;
+ $('#auth-footnote').textContent=onboarding?'Choose the portal for this Google account. It stays connected to this account.':'One Google sign-in for new and returning users. Your existing account always opens its own portal.';
+ const url=new URL(location.href);url.search='';url.searchParams.set('portal',portal);if(onboarding)url.searchParams.set('finish','1');history.replaceState(null,'',url);
+ document.title=(grower?'Grower':'Buyer')+' portal · EasyFarm';
 }
-document.querySelectorAll('[data-portal]').forEach(button=>button.addEventListener('click',()=>{if(!busy){portal=button.dataset.portal;renderAuth();}}));
-$('#toggle-auth').addEventListener('click',()=>{if(!busy){signup=!signup;renderAuth();}});
-$('#show-password').addEventListener('click',()=>{const input=$('[name="password"]');const show=input.type==='password';input.type=show?'text':'password';$('#show-password').textContent=show?'Hide':'Show';$('#show-password').setAttribute('aria-label',show?'Hide password':'Show password');});
-$('#auth-form').addEventListener('submit',async event=>{
-  event.preventDefault();if(busy)return;busy=true;$('#auth-submit').disabled=true;$('#auth-error').hidden=true;
-  $('#auth-submit').textContent=signup?'Creating your account…':'Signing in…';
-  try{
-    const values=Object.fromEntries(new FormData(event.currentTarget));
-    const body=signup?{...values,role:portal}:{email:values.email,password:values.password};
-    const response=await fetch('/api/auth/'+(signup?'sign-up/email':'sign-in/email'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const result=await response.json();if(!response.ok)throw Error(result.message||result.error||'Could not sign in. Try again.');
-    location.replace('/'+(result.user.role==='grower'?'grower':'buyer'));
-  }catch(error){renderAuth();$('#auth-error').textContent=error.message;$('#auth-error').hidden=false;}
-  finally{busy=false;$('#auth-submit').disabled=false;}
+document.querySelectorAll('[data-portal]').forEach(button=>button.addEventListener('click',()=>{if(!busy){portal=button.dataset.portal;$('#auth-error').hidden=true;renderAuth();}}));
+$('#google-signin').addEventListener('click',async()=>{
+ if(busy||!googleAvailable)return;busy=true;renderAuth();$('#auth-error').hidden=true;$('#google-signin span').textContent='Connecting to Google…';
+ try{
+  const callback='/login?portal='+portal+'&finish=1';
+  const response=await fetch('/api/auth/sign-in/social',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider:'google',callbackURL:callback,newUserCallbackURL:callback,errorCallbackURL:'/login?portal='+portal+'&error=google',disableRedirect:true})});
+  const result=await response.json();if(!response.ok||!result.url)throw Error(result.message||'Could not connect to Google. Try again.');
+  const target=new URL(result.url);if(target.protocol!=='https:'||target.hostname!=='accounts.google.com')throw Error('Could not connect to Google. Try again.');
+  location.assign(target.href);
+ }catch(error){busy=false;renderAuth();$('#google-signin span').textContent='Continue with Google';showError(error.message);}
+});
+$('#profile-form').addEventListener('submit',async event=>{
+ event.preventDefault();if(busy)return;busy=true;renderAuth();$('#auth-error').hidden=true;
+ try{
+  const response=await fetch('/api/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...Object.fromEntries(new FormData(event.currentTarget)),role:portal})});
+  const result=await response.json();if(!response.ok)throw Error(result.error||'Could not complete your profile. Try again.');
+  location.replace('/'+result.role);
+ }catch(error){busy=false;renderAuth();showError(error.message);}
+});
+$('#use-other-account').addEventListener('click',async()=>{
+ if(busy)return;busy=true;renderAuth();
+ try{const response=await fetch('/api/auth/sign-out',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});if(!response.ok)throw Error('Could not sign out. Try again.');location.replace('/login?portal='+portal);}
+ catch(error){busy=false;renderAuth();showError(error.message);}
 });
 renderAuth();
-(async()=>{try{const session=await(await fetch('/api/auth/get-session')).json();if(session?.user)location.replace('/'+(session.user.role==='grower'?'grower':'buyer'));}catch{/* The form reports connection errors on submit. */}})();
+(async()=>{
+ try{
+  const [configResponse,sessionResponse]=await Promise.all([fetch('/api/auth-config'),fetch('/api/auth/get-session')]);
+  if(!configResponse.ok||!sessionResponse.ok)throw Error('Sign-in is temporarily unavailable. Refresh to try again.');
+  const [config,session]=await Promise.all([configResponse.json(),sessionResponse.json()]);googleAvailable=config.google===true;
+  if(session?.user){
+   if(['buyer','grower'].includes(session.user.role)){location.replace('/'+session.user.role);return;}
+   onboarding=true;$('#google-identity').textContent='Signed in as '+session.user.name+' · '+session.user.email;
+  }
+  $('#google-status').textContent=googleAvailable?'Secure sign-in with your Google account.':'Google sign-in is not available yet. The site owner needs to finish connecting Google.';
+  renderAuth();
+  if(query.has('error'))showError('Google sign-in was cancelled or could not be completed. Please try again.');
+ }catch(error){$('#google-status').textContent='Sign-in is temporarily unavailable.';showError(error.message);}
+})();

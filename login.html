@@ -21,22 +21,22 @@
       <button type="button" data-portal="grower" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V9m0 7C3 16 3 7 3 7c9 0 9 9 9 9Zm0-5s0-9 9-9c0 9-9 9-9 9Z"/></svg><span>Grower<small>Sell your harvest</small></span></button>
     </div>
     <p class="auth-kicker" id="portal-label">BUYER PORTAL</p>
-    <h2 id="auth-title">Welcome back.</h2>
-    <p class="auth-intro" id="auth-description">Sign in to source produce and manage your purchases.</p>
-    <form id="auth-form">
-      <div id="registration-fields" hidden>
-        <label>Your name<input name="name" autocomplete="name" maxlength="100" required disabled></label>
-        <label><span id="organization-label">Business name</span><input name="organization" autocomplete="organization" maxlength="100" required disabled></label>
-        <label>City or region<input name="location" autocomplete="address-level2" maxlength="100" required disabled></label>
-      </div>
-      <label>Email address<input type="email" name="email" autocomplete="username" inputmode="email" required maxlength="254"></label>
-      <label>Password<span class="password-field"><input type="password" name="password" autocomplete="current-password" required maxlength="128"><button id="show-password" type="button" aria-label="Show password">Show</button></span></label>
-      <p id="password-hint" class="auth-hint" hidden>Use at least 10 characters.</p>
-      <p id="auth-error" role="alert" hidden></p>
-      <button class="primary auth-submit" id="auth-submit" type="submit">Sign in to buyer portal</button>
+    <h2 id="auth-title">Your next connection.</h2>
+    <p class="auth-intro" id="auth-description">Sign in with Google to source produce and manage your purchases.</p>
+    <button type="button" id="google-signin" class="google-signin" disabled>
+      <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M43.6 24.5c0-1.5-.1-2.9-.4-4.3H24v8.2h11a9.4 9.4 0 0 1-4.1 6.2v5.2h6.7c3.9-3.6 6-8.9 6-15.3Z"/><path fill="#34A853" d="M24 44c5.4 0 10-1.8 13.3-4.9l-6.7-5.2a12.1 12.1 0 0 1-18-6.3H5.7v5.3A20 20 0 0 0 24 44Z"/><path fill="#FBBC05" d="M12.6 27.6a12 12 0 0 1 0-7.2v-5.3H5.7a20 20 0 0 0 0 17.8l6.9-5.3Z"/><path fill="#EA4335" d="M24 12c3 0 5.6 1 7.7 3l5.8-5.8A19.2 19.2 0 0 0 24 4 20 20 0 0 0 5.7 15.1l6.9 5.3A12 12 0 0 1 24 12Z"/></svg>
+      <span>Continue with Google</span>
+    </button>
+    <p id="google-status" class="auth-hint" role="status">Checking sign-in availability…</p>
+    <form id="profile-form" hidden>
+      <p id="google-identity" class="google-identity"></p>
+      <label><span id="organization-label">Business name</span><input name="organization" autocomplete="organization" maxlength="100" required></label>
+      <label>City or region<input name="location" autocomplete="address-level2" maxlength="100" required></label>
+      <button class="primary auth-submit" id="profile-submit" type="submit">Open buyer portal</button>
+      <button type="button" class="use-other-account" id="use-other-account">Use another Google account</button>
     </form>
-    <p class="auth-toggle"><span id="toggle-copy">New to EasyFarm?</span> <button type="button" id="toggle-auth">Create an account</button></p>
-    <p class="auth-footnote">Your account opens its own portal. Buyer and grower accounts stay separate.</p>
+    <p id="auth-error" role="alert" hidden></p>
+    <p class="auth-footnote" id="auth-footnote">One Google sign-in for new and returning users. Your existing account always opens its own portal.</p>
     <a class="auth-home" href="/">Back to EasyFarm</a>
   </main>
 </div>

@@ -44,6 +44,7 @@ function notice(message, error = false) {
 }
 async function read() {
   const result = await fetch(batch?'/api/trace/'+encodeURIComponent(batch):'/api/state');
+  if(result.status===409){location.replace('/login?portal='+requestedPortal+'&finish=1');throw Object.assign(Error('Complete your profile.'),{redirect:true});}
   if(result.status===401){location.replace('/login?portal='+(data?.user?.role||requestedPortal));throw Object.assign(Error('Sign in to continue.'),{redirect:true});}
   if (!result.ok) throw Error("Could not load the marketplace.");
   data = await result.json();

@@ -35,14 +35,14 @@ export class Marketplace extends DurableObject {
     await this.ready;
     if(!this.env.BETTER_AUTH_SECRET)return Response.json({error:'Sign-in is being configured. Try again shortly.'},{status:503});
     const url=new URL(request.url);
-    if(!this.authByOrigin.has(url.origin))this.authByOrigin.set(url.origin,createAuth(this.database,{origin:url.origin,secret:this.env.BETTER_AUTH_SECRET}));
+    if(!this.authByOrigin.has(url.origin))this.authByOrigin.set(url.origin,createAuth(this.database,{origin:url.origin,secret:this.env.BETTER_AUTH_SECRET,googleClientId:this.env.GOOGLE_CLIENT_ID,googleClientSecret:this.env.GOOGLE_CLIENT_SECRET}));
     // Bound every request before either the auth library or marketplace parses it.
     if(request.body){const reader=request.body.getReader();let size=0;const chunks=[];
       while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>16000){await reader.cancel();return Response.json({error:'Request is too large.'},{status:413});}chunks.push(value);}
       const bytes=new Uint8Array(size);let offset=0;for(const part of chunks){bytes.set(part,offset);offset+=part.length;}
       request=new Request(request,{body:bytes});
     }
-    return handleMarketplace(request,{auth:this.authByOrigin.get(url.origin),store:this});
+    return handleMarketplace(request,{auth:this.authByOrigin.get(url.origin),store:this,googleConfigured:Boolean(this.env.GOOGLE_CLIENT_ID && this.env.GOOGLE_CLIENT_SECRET)});
   }
 }
 export default {
