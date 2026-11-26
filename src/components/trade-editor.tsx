@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { categories } from "@/lib/utils";
+import { categories, money } from "@/lib/utils";
 import type { Action, Farm, Lot, Offer } from "@/lib/types";
 export type Edit =
   | { kind: "listing"; lot?: Lot; farm: Farm }
@@ -207,6 +207,24 @@ export function TradeEditor({
               </>
             )}
           </div>
+          {(edit.kind === "offer" || edit.kind === "counter") && (
+            <div className="offer-total" aria-live="polite">
+              <p>
+                Proposed total
+                <small>
+                  {Number(form.watch("quantity")) || 0} kg ×{" "}
+                  {money(Number(form.watch("price")) || 0)}/kg · Pickup agreed
+                  above
+                </small>
+              </p>
+              <strong>
+                {money(
+                  (Number(form.watch("quantity")) || 0) *
+                    (Number(form.watch("price")) || 0),
+                )}
+              </strong>
+            </div>
+          )}
           {error && (
             <p className="error-box" role="alert">
               {error}
