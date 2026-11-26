@@ -32,11 +32,11 @@ const server = createServer(async (request, response) => {
     response.writeHead(405, { Allow: "GET, HEAD" }).end();
     return;
   }
-  const page = pathname === "/" ? "/index.html" : pathname === "/film-script" ? "/film-script.html" : pathname;
+  const page = pathname === "/" ? "/index.html" : pathname === "/film-script" ? "/film-script.html" : pathname === '/login' ? '/login.html' : ['/buyer','/grower'].includes(pathname) ? '/app.html' : pathname;
   const file = resolve(root, "." + page);
   const type = types[extname(file)];
   if (!file.startsWith(root + sep) || !type ||
-      !["/index.html", "/film-script.html", "/app.html", "/app.js", "/app.css", "/landing.js", "/landing.css", "/EasyFarm Footage.html", "/Antigravity Footage.html"].includes(page) &&
+      !["/index.html", "/film-script.html", "/app.html", "/app.js", "/app.css", "/login.html", "/login.js", "/login.css", "/landing.js", "/landing.css", "/EasyFarm Footage.html", "/Antigravity Footage.html"].includes(page) &&
       !pathname.startsWith("/assets/") && !pathname.startsWith("/hero-footage/")) {
     response.writeHead(404).end();
     return;

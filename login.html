@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Sign in to your EasyFarm buyer or grower portal.">
+<title>Sign in · EasyFarm</title>
+<link rel="stylesheet" href="/app.css"><link rel="stylesheet" href="/login.css">
+<script src="/login.js" defer></script>
+</head>
+<body class="auth-page">
+<div class="auth-layout">
+  <section class="auth-story">
+    <a class="brand" href="/" aria-label="EasyFarm home"><span aria-hidden="true"></span>EasyFarm</a>
+    <div><p class="eyebrow">GOOD PRODUCE. DIRECT CONNECTIONS.</p><h1>From your field.<br>To their table.</h1><p>A place for growers and businesses to trade on their own terms.</p></div>
+    <small>Illustrative greenhouse imagery</small>
+  </section>
+  <main class="auth-card">
+    <a class="brand mobile-auth-brand" href="/"><span aria-hidden="true"></span>EasyFarm</a>
+    <div class="portal-choice" aria-label="Choose your portal">
+      <button type="button" data-portal="buyer" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h3l3 13h10l3-9H7M11 21h.01M18 21h.01"/></svg><span>Buyer<small>Source produce</small></span></button>
+      <button type="button" data-portal="grower" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V9m0 7C3 16 3 7 3 7c9 0 9 9 9 9Zm0-5s0-9 9-9c0 9-9 9-9 9Z"/></svg><span>Grower<small>Sell your harvest</small></span></button>
+    </div>
+    <p class="auth-kicker" id="portal-label">BUYER PORTAL</p>
+    <h2 id="auth-title">Welcome back.</h2>
+    <p class="auth-intro" id="auth-description">Sign in to source produce and manage your purchases.</p>
+    <form id="auth-form">
+      <div id="registration-fields" hidden>
+        <label>Your name<input name="name" autocomplete="name" maxlength="100" required disabled></label>
+        <label><span id="organization-label">Business name</span><input name="organization" autocomplete="organization" maxlength="100" required disabled></label>
+        <label>City or region<input name="location" autocomplete="address-level2" maxlength="100" required disabled></label>
+      </div>
+      <label>Email address<input type="email" name="email" autocomplete="username" inputmode="email" required maxlength="254"></label>
+      <label>Password<span class="password-field"><input type="password" name="password" autocomplete="current-password" required maxlength="128"><button id="show-password" type="button" aria-label="Show password">Show</button></span></label>
+      <p id="password-hint" class="auth-hint" hidden>Use at least 10 characters.</p>
+      <p id="auth-error" role="alert" hidden></p>
+      <button class="primary auth-submit" id="auth-submit" type="submit">Sign in to buyer portal</button>
+    </form>
+    <p class="auth-toggle"><span id="toggle-copy">New to EasyFarm?</span> <button type="button" id="toggle-auth">Create an account</button></p>
+    <p class="auth-footnote">Your account opens its own portal. Buyer and grower accounts stay separate.</p>
+    <a class="auth-home" href="/">Back to EasyFarm</a>
+  </main>
+</div>
+</body></html>

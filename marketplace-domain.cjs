@@ -1,6 +1,6 @@
 const {randomUUID}=require("node:crypto");
 const now = () => new Date().toISOString();
-const id = prefix => prefix + "-" + randomUUID().slice(0, 8);
+const id = prefix => prefix + "-" + randomUUID();
 const seed = {
   farms: [
     { id: "meadow", name: "Meadow Lane Farm", person: "Maya Rao", location: "Nashik", bio: "We grow peppers and tomatoes in a greenhouse and pack to order.", image: "assets/posters/03-tomato-harvest-4k.jpg" },
@@ -36,14 +36,18 @@ function record(db, order, event, details) {
   db.history.push(entry);
   order.timeline.push({ event, at: entry.at });
 }
-function apply(db, data) {
-  const { action, role } = data;
+function apply(db, data, user) {
+  requireThat(user?.id, "Sign in to continue.");
+  const { action } = data;
+  const role = user.role;
   requireThat(role === "grower" || role === "buyer", "Choose a workspace role.");
   const grower = role === "grower";
 
   if (action === "farm") {
     requireThat(grower, "Open the grower workspace to edit a farm.");
     const farm = data.id ? find(db.farms, data.id, "Farm") : { id: id("farm"), image: "assets/posters/02-farmer-golden-field-4k.jpg" };
+    requireThat(!data.id || farm.owner === user.id, "You can only edit your own farm.");
+    farm.owner = user.id;
     Object.assign(farm, { name: text(data.name, "farm name"), person: text(data.person, "grower name"), location: text(data.location, "location"), bio: text(data.bio, "farm description", true) });
     if (!data.id) db.farms.push(farm);
     return farm.id;
@@ -51,6 +55,7 @@ function apply(db, data) {
   if (action === "listing") {
     requireThat(grower, "Open the grower workspace to list produce.");
     const farm = find(db.farms, data.farm, "Farm");
+    requireThat(farm.owner === user.id, "You can only publish to your own farm.");
     const listing = data.id ? find(db.listings, data.id, "Listing") : { id: id("lot"), farm: farm.id, quality: "Grower declared", open: true };
     if (data.id) requireThat(listing.farm === data.farm, "Select the farm that owns this listing.");
     requireThat(listing.farm === farm.id, "Select this listing’s farm.");
@@ -60,12 +65,14 @@ function apply(db, data) {
   }
   if (action === "quality") {
     const listing = find(db.listings, data.listing, "Listing");
+    requireThat(find(db.farms,listing.farm,"Farm").owner === user.id, "You can only check your own lot.");
     requireThat(grower && listing.farm === data.farm, "Select the farm for this lot.");
     listing.quality = "Sample check passed (simulated)";
     return listing.id;
   }
   if (action === "order-status" || action === "payment") {
     const order = find(db.orders, data.order, "Order");
+    requireThat(grower ? find(db.farms,order.farm,"Farm").owner === user.id : order.buyer === user.id, "This order does not belong to your account.");
     if (action === "payment") {
       requireThat(!grower && order.payment === "Unpaid", "This sample payment is already recorded or unavailable in this view.");
       order.payment = "Paid (simulated)";
@@ -82,15 +89,17 @@ function apply(db, data) {
   if (action === "offer") {
     requireThat(!grower, "Use the buyer workspace to create an offer.");
     const listing = find(db.listings, data.listing, "Listing");
+    requireThat(find(db.farms,listing.farm,"Farm").owner, "This is an illustrative lot. Choose a listing published by a grower.");
     const quantity = amount(data.quantity, "quantity");
     requireThat(listing.open && quantity <= listing.quantity, "That quantity is no longer available.");
-    const offer = { id: id("offer"), listing: listing.id, farm: listing.farm, crop: listing.crop, quantity, price: amount(data.price, "price"), pickup: text(data.pickup, "pickup window"), status: "Pending", by: "buyer", messages: [], created: now() };
+    const offer = { id: id("offer"), buyer: user.id, buyerName: user.organization || user.name, buyerPerson: user.name, listing: listing.id, farm: listing.farm, crop: listing.crop, quantity, price: amount(data.price, "price"), pickup: text(data.pickup, "pickup window"), status: "Pending", by: "buyer", messages: [], created: now() };
     const message = text(data.message, "message", true);
     if (message) offer.messages.push({ by: role, body: message, at: now() });
     db.offers.push(offer);
     return offer.id;
   }
   const offer = find(db.offers, data.offer, "Offer");
+  requireThat(grower ? find(db.farms,offer.farm,"Farm").owner === user.id : offer.buyer === user.id, "This conversation does not belong to your account.");
   requireThat(!grower || data.farm === offer.farm, "Select the farm for this offer.");
   if (action === "message") {
     offer.messages.push({ by: role, body: text(data.message, "message"), at: now() });
@@ -117,10 +126,30 @@ function apply(db, data) {
   listing.quantity -= offer.quantity;
   if (!listing.quantity) listing.open = false;
   offer.status = "Accepted";
-  const order = { id: id("EF"), listing: listing.id, offer: offer.id, farm: offer.farm, crop: offer.crop, quantity: offer.quantity, price: offer.price, total: Math.round(offer.price * offer.quantity * 100) / 100, pickup: offer.pickup, grade: listing.grade, harvest: listing.harvest, quality: listing.quality, status: "Accepted", payment: "Unpaid", timeline: [] };
+  const order = { id: id("EF"), buyer: offer.buyer, buyerName: offer.buyerName, buyerPerson: offer.buyerPerson, listing: listing.id, offer: offer.id, farm: offer.farm, crop: offer.crop, quantity: offer.quantity, price: offer.price, total: Math.round(offer.price * offer.quantity * 100) / 100, pickup: offer.pickup, grade: listing.grade, harvest: listing.harvest, quality: listing.quality, status: "Accepted", payment: "Unpaid", timeline: [] };
   db.orders.push(order);
   record(db, order, "Accepted", { crop: order.crop, quantity: order.quantity, price: order.price, pickup: order.pickup });
   return order.id;
 }
 
-module.exports={seed,apply};
+function ensureFarm(db,user){
+  if(user.role!=='grower'||db.farms.some(f=>f.owner===user.id))return false;
+  db.farms.push({id:id('farm'),owner:user.id,name:user.organization,person:user.name,location:user.location||'Location not supplied',bio:'',image:'assets/posters/03-tomato-harvest-4k.jpg'});
+  return true;
+}
+function visibleState(db,user){
+  const own=farm=>db.farms.some(f=>f.id===farm&&f.owner===user.id);
+  const offers=db.offers.filter(o=>user.role==='grower'?own(o.farm):o.buyer===user.id);
+  const orders=db.orders.filter(o=>user.role==='grower'?own(o.farm):o.buyer===user.id);
+  const farms=db.farms.map(({owner,...farm})=>({...farm,owned:owner===user.id,sample:!owner}));
+  return {user:{id:user.id,name:user.name,organization:user.organization,location:user.location,role:user.role,email:user.email},farms,listings:db.listings.map(l=>({...l,sample:!db.farms.find(f=>f.id===l.farm)?.owner})),offers,orders,history:db.history.filter(h=>orders.some(o=>o.id===h.order))};
+}
+function traceState(db,key){
+  const order=db.orders.find(o=>o.id===key);
+  requireThat(order,'Order was not found.');
+  // Public QR records deliberately omit buyer identities and private messages.
+  const {buyer,buyerName,buyerPerson,offer,...record}=order;
+  const {owner,...farm}=find(db.farms,order.farm,'Farm');
+  return {farms:[farm],listings:[],offers:[],orders:[record],history:db.history.filter(h=>h.order===key)};
+}
+module.exports={seed,apply,ensureFarm,visibleState,traceState};

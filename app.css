@@ -279,6 +279,19 @@ dialog { background:#203426; color:#f0f3e8; padding:26px; border-radius:14px; }
 
 /* Acrylic workspace: one app frame, one scrolling work area. */
 .mobile-nav { display:none; }
+body[data-loading] .shell { visibility:hidden; }
+.account-button { display:flex; align-items:center; gap:9px; border:1px solid #d5dfb442; border-radius:20px; background:#25361f70; padding:5px 12px 5px 5px; font-size:11px; color:#eff2e2; }
+.account-avatar { display:grid; place-items:center; width:29px; height:29px; border-radius:50%; background:#d4ddbd; color:#314324; font-size:12px; font-weight:600; }
+#account-button > span { display:inline; }
+#account-button > .account-avatar { display:grid; }
+.portal-kicker { font-size:9px; letter-spacing:1.2px; color:#d2dec1; margin-bottom:12px; text-transform:uppercase; }
+.onboarding-copy { color:#677357; font-size:13px; margin:18px 0; line-height:1.7; }
+.buying-desk .actions { display:grid; gap:5px; margin-top:12px; }
+.buying-desk .actions button { text-align:left; padding:6px 0; }
+.overview-bottom button.overview-note { background:#23351c45; border:1px solid #c7d5aa40; padding:8px 12px; font-size:11px; }
+.record-list p,.panel .eyebrow { overflow-wrap:anywhere; }
+#account-dialog h3 { font-size:25px; margin:10px 0 16px; }
+#sign-out { margin-top:20px; width:100%; min-height:44px; }
 :root { --paper:#dddcc8; --cream:#eeebda; --pine:#26301e; --ink:#f5f5e9; --soft:#d0d3bd; --line:#e0e2c432; --lime:#c5f052; }
 body { height:100dvh; overflow:hidden; background:#c5c7ae url('assets/greenhouse-workspace.png') center/cover fixed; }
 body::before { content:""; position:fixed; inset:0; backdrop-filter:blur(20px); background:#dbdbc347; z-index:-1; }
@@ -376,6 +389,12 @@ dialog { background:#38452bef; backdrop-filter:blur(30px); border:1px solid #e6e
  .workspace-bar h1 { font-size:18px; }
  .workspace-bar span { display:none; }
  .switcher button { min-height:32px; padding:5px 10px; font-size:11px; }
+ .account-button { gap:6px; font-size:10px; padding-right:9px; min-height:36px; }
+ .account-avatar { width:26px; height:26px; }
+ .portal-kicker { font-size:8px; letter-spacing:.8px; margin-bottom:10px; }
+ .buyer-home .overview-intro h2,.grower-home .overview-intro h2 { font-size:29px; }
+ .onboarding-copy { font-size:12px; margin:12px 0; }
+ .overview-bottom button.overview-note { margin-top:12px; font-size:10px; }
  .overview-hero { padding:25px 18px 20px; }
  .overview-intro h2 { font-size:31px; }
  .overview-cards { margin-top:22px; }

@@ -5,6 +5,7 @@
 - Preserve the existing marketing landing page, HeroLoop footage and film-script page when working on the marketplace.
 - Match `design/app-references/01-primary-ui.png`: translucent olive acrylic surfaces, cream lot records, restrained lime actions, quiet navigation, compact app layouts. Avoid repeated decorative arrows and long dashboard stacks.
 - Mobile has its own persistent bottom icon navigation, inspired by the simplicity of Cal AI and adapted to EasyFarm trading. Preserve the desktop sidebar separately.
+- Buyer and grower are separate authenticated portals (`/buyer`, `/grower`). Better Auth handles email/password sessions; account role is fixed. Enforce ownership in the API, never from a submitted role or farm selector. Keep private offers/messages/orders scoped to their participants. QR trace records are public and read-only, with buyer identity and messages omitted.
 - Keep blockchain out of the product. Use ordinary persistent order history.
 - Label illustrative data, generated imagery and simulated payment/quality checks accurately. Do not imply production authentication, payment, inspection or live market integrations.
 - Keep QA data isolated from the regular local database. Do not commit private database records, credentials, raw footage downloads or build output. Optimized runtime media is versioned.

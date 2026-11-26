@@ -4,12 +4,15 @@
   "scripts": {
     "start": "node server.js",
     "build": "node tools/build.cjs",
-    "dev:cloudflare": "npm run build && wrangler dev --port 8787",
+    "dev:cloudflare": "node tools/dev-secret.cjs && npm run build && wrangler dev --port 8787 --persist-to .wrangler/local",
     "check:cloudflare": "npm run build && wrangler deploy --dry-run",
     "deploy": "npm run build && wrangler deploy",
     "test:browser": "node tools/verify.cjs"
   },
+  "engines": { "node": ">=24" },
   "dependencies": {
+    "better-auth": "^1.7.28",
+    "kysely": "^0.29.9",
     "qrcode": "^1.5.4"
   },
   "devDependencies": {

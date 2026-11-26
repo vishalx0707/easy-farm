@@ -3,6 +3,7 @@ const content = qs("#content");
 const editor = qs("#editor");
 const params = new URLSearchParams(location.search);
 const batch = params.get("batch");
+const requestedPortal=location.pathname==='/grower'||params.get('role')==='grower'?'grower':'buyer';
 const categories = ["Peppers", "Root vegetables", "Tomatoes", "Leafy greens", "Other"];
 const screens = {
   buyer: { overview: "Overview", messages: "Messages", catalogue: "Produce", farmers: "Find growers", market: "Market prices", offers: "Offers", orders: "Orders", deliveries: "Deliveries", history: "Trade history" },
@@ -14,7 +15,7 @@ const actions = {
   "order-status": "Delivery status updated.", payment: "Sample payment recorded."
 };
 const state = {
-  role: params.get("role") === "grower" ? "grower" : "buyer",
+  role: "buyer",
   view: params.get("view"), farm: localStorage.getItem("easyfarm-farm") || "meadow",
   detail: params.get("detail") ? {type: params.get("type"), id: params.get("detail")} : null, filters: { search: "", category: "", max: "", location: "", quality: "" },
   period: "7", marketCrop: "Peppers", offerSort: "recent", edit: null
@@ -42,10 +43,15 @@ function notice(message, error = false) {
   box.classList.toggle("error", error);
 }
 async function read() {
-  const result = await fetch("/api/state");
+  const result = await fetch(batch?'/api/trace/'+encodeURIComponent(batch):'/api/state');
+  if(result.status===401){location.replace('/login?portal='+(data?.user?.role||requestedPortal));throw Object.assign(Error('Sign in to continue.'),{redirect:true});}
   if (!result.ok) throw Error("Could not load the marketplace.");
   data = await result.json();
-  if (!farmBy(state.farm)) state.farm = data.farms[0]?.id;
+  if(data.user){
+    state.role=data.user.role;
+    const farms=data.farms.filter(f=>f.owned);
+    if(!farms.some(f=>f.id===state.farm))state.farm=farms[0]?.id;
+  }
 }
 async function mutate(action, values = {}) {
   if (busy) return;
@@ -54,9 +60,10 @@ async function mutate(action, values = {}) {
   try {
     const response = await fetch("/api/action", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role: state.role, farm: state.farm, ...values, action })
+      body: JSON.stringify({ farm: state.farm, ...values, action })
     });
     const result = await response.json();
+    if(response.status===401){location.replace('/login?portal='+state.role);throw Error('Your session ended. Sign in again.');}
     if (!response.ok) throw Error(result.error);
     await read();
     if (action === "farm") {
@@ -93,7 +100,7 @@ function hero(title, copy, action = "", image = "") {
   return '<section class="feature"' + visual + '><div><h2>' + e(title) + '</h2><p>' + e(copy) + '</p>' + action + '</div></section>';
 }
 function listingCards(listings) {
-  return listings.length ? listings.map(lot => '<article class="lot-card"><img src="' + photo(lot.category) + '" alt="" loading="lazy"><div class="lot-copy"><div class="lot-top"><div><h3>' + e(lot.crop) + '</h3><p>' + e(farmBy(lot.farm)?.name) + ' · ' + e(farmBy(lot.farm)?.location) + '</p></div><strong>' + money(lot.price) + '<small> / kg</small></strong></div><div class="lot-bottom"><span>' + e(lot.quantity) + ' kg · Grade ' + e(lot.grade) + '</span>' + button("View lot", "lot", lot.id) + '</div></div></article>').join("") : empty("No produce matches those filters.");
+  return listings.length ? listings.map(lot => '<article class="lot-card"><img src="' + photo(lot.category) + '" alt="" loading="lazy"><div class="lot-copy"><div class="lot-top"><div><h3>' + e(lot.crop) + '</h3><p>' + e(farmBy(lot.farm)?.name) + ' · ' + e(farmBy(lot.farm)?.location) + (lot.sample ? ' · Sample farm' : '') + '</p></div><strong>' + money(lot.price) + '<small> / kg</small></strong></div><div class="lot-bottom"><span>' + e(lot.quantity) + ' kg · Grade ' + e(lot.grade) + '</span>' + button("View lot", "lot", lot.id) + '</div></div></article>').join("") : empty("No produce matches those filters.");
 }
 function filtered() {
   const { search, category, max, location, quality } = state.filters;
@@ -108,18 +115,25 @@ function options(items, selected) {
   return items.map(item => '<option' + (item === selected ? ' selected' : '') + '>' + e(item) + '</option>').join("");
 }
 function overview() {
- const grower=state.role==='grower', farm=farmBy(state.farm);
- const lots=data.listings.filter(l=>l.open&&l.quantity>0&&(!grower||l.farm===state.farm));
- const lot=lots[0];
- const pending=data.offers.filter(o=>o.status==='Pending'&&(!grower||o.farm===state.farm)).length;
- return '<section class="overview-hero"><div class="overview-intro"><h2>'+(grower?'Good morning.':'Fresh from the farm.')+'</h2><p>'+(grower?'Manage your harvest, offers, and orders.':'Find your grower. Agree your terms. Keep trade simple.')+'</p></div><div class="overview-cards"><article class="harvest-spotlight"><img src="'+photo(lot?.category)+'" alt="Representative harvest"><div><p class="eyebrow">'+(grower?'HARVEST READY':'AVAILABLE NOW')+'</p><h3>'+e(lot?.crop||'Your next harvest')+'</h3><p>'+(lot?e(lot.quantity)+' kg · '+money(lot.price)+'/kg':'Publish your first crop lot.')+'</p>'+button(grower?'List harvest':'Browse produce',grower?'edit-lot':'browse','','primary')+'</div></article><article class="lot-record"><div class="lot-record-heading"><h3>Lot record</h3><small>'+e(lot?.id||'New harvest')+'</small></div><dl>'+metric('Crop',lot?.crop||'—')+metric('Grade',lot?.grade||'—')+metric('Harvest',lot?.harvest||'Not supplied')+metric('Available',lot?lot.quantity+' kg':'—')+metric('Asking price',lot?money(lot.price)+'/kg':'—')+'</dl>'+(lot?button('View lot','lot',lot.id):'')+'</article></div><div class="overview-bottom"><div class="grower-caption"><span class="avatar">'+e(farm.person[0])+'</span><div><strong>'+e(farm.person)+'</strong><small>'+e(farm.name)+' · '+e(farm.location)+'</small></div>'+button('Farm profile','farm',farm.id)+'</div><p class="overview-note">'+pending+' open offers · '+lots.length+' available lots</p></div></section>';
+ if(state.role==='buyer')return buyerOverview();
+ const farm=farmBy(state.farm), lots=data.listings.filter(l=>l.open&&l.quantity>0&&l.farm===state.farm),lot=lots[0];
+ const pending=data.offers.filter(o=>o.status==='Pending'&&o.farm===state.farm).length;
+ const harvest=lot?'<dl>'+metric('Crop',lot.crop)+metric('Grade',lot.grade)+metric('Harvest',lot.harvest||'Not supplied')+metric('Available',lot.quantity+' kg')+metric('Asking price',money(lot.price)+'/kg')+'</dl>'+button('View lot','lot',lot.id):'<p class="onboarding-copy">Your farm profile is ready. Add your first crop lot so buyers can find your harvest.</p>'+button('Complete farm profile','farm',farm.id);
+ return '<section class="overview-hero grower-home"><div class="overview-intro"><p class="portal-kicker">GROWER PORTAL · '+e(farm.name)+'</p><h2>Good morning, '+e(data.user.name.split(' ')[0])+'.</h2><p>Your harvest, incoming offers and pickups.</p></div><div class="overview-cards"><article class="harvest-spotlight"><img src="'+photo(lot?.category)+'" alt="Representative harvest"><div><p class="eyebrow">'+(lot?'YOUR HARVEST':'READY WHEN YOU ARE')+'</p><h3>'+e(lot?.crop||'List your first harvest')+'</h3><p>'+(lot?e(lot.quantity)+' kg · '+money(lot.price)+'/kg':'Your produce. Your asking price.')+'</p>'+button('List harvest','edit-lot','','primary')+'</div></article><article class="lot-record"><div class="lot-record-heading"><h3>'+(lot?'Lot record':'Your farm')+'</h3><small>'+e(lot?.id||farm.location)+'</small></div>'+harvest+'</article></div><div class="overview-bottom"><div class="grower-caption"><span class="avatar">'+e(data.user.name[0])+'</span><div><strong>'+e(farm.person)+'</strong><small>'+e(farm.name)+' · '+e(farm.location)+'</small></div>'+button('Farm profile','farm',farm.id)+'</div><button type="button" class="overview-note" data-nav="offers">'+pending+' incoming offers · '+lots.length+' active lots</button></div></section>';
+}
+function buyerOverview(){
+ const lots=data.listings.filter(l=>l.open&&l.quantity>0).sort((a,b)=>Number(a.sample)-Number(b.sample));
+ const lot=lots[0],farm=lot?farmBy(lot.farm):null;
+ const pending=data.offers.filter(o=>o.status==='Pending').length,active=data.orders.filter(o=>o.status!=='Delivered');
+ const next=active.at(-1);
+ return '<section class="overview-hero buyer-home"><div class="overview-intro"><p class="portal-kicker">BUYER PORTAL · '+e(data.user.organization)+'</p><h2>Good food. Good business.</h2><p>Source fresh produce, agree terms and track your purchases.</p></div><div class="overview-cards"><article class="harvest-spotlight"><img src="'+photo(lot?.category)+'" alt="Representative fresh produce"><div><p class="eyebrow">'+(lot?.sample?'EXPLORE SAMPLE PRODUCE':'DIRECT FROM GROWERS')+'</p><h3>'+e(lot?.crop||'Find your next supplier')+'</h3><p>'+(lot?e(farm.name)+' · '+money(lot.price)+'/kg':'Know the farm behind your food.')+'</p>'+button('Browse produce','browse','','primary')+'</div></article><article class="lot-record buying-desk"><div class="lot-record-heading"><h3>Your buying desk</h3></div><dl>'+metric('Open offers',pending)+metric('Orders underway',active.length)+metric('Next pickup',next?.pickup||'Nothing scheduled')+'</dl><div class="actions">'+button('Your orders','buyer-orders')+button('Find growers','find-growers')+'</div></article></div><div class="overview-bottom"><div class="grower-caption"><span class="avatar">'+e(data.user.name[0])+'</span><div><strong>'+e(data.user.name)+'</strong><small>'+e(data.user.organization)+' · '+e(data.user.location||'Business buyer')+'</small></div></div><button type="button" class="overview-note" data-nav="offers">'+pending+' offers to follow up</button></div></section>';
 }
 function deliveries() {
   return orders();
 }
 function messages(){
  const list=data.offers.filter(o=>state.role!=='grower'||o.farm===state.farm).slice().reverse();
- return '<div class="section-row"><div><h2>Conversations</h2><p class="eyebrow">Messages stay connected to your trade.</p></div></div>'+(list.length?'<div class="record-list trade-records">'+list.map(o=>'<article><div><h3>'+e(o.crop)+'</h3><p>'+e(farmBy(o.farm)?.name)+'</p><p>'+e(o.messages.at(-1)?.body.slice(0,100)||'Start the conversation.')+'</p></div>'+button('Open conversation','offer-detail',o.id)+'</article>').join('')+'</div>':empty('Make or receive an offer to start a direct conversation.'));
+ return '<div class="section-row"><div><h2>Conversations</h2><p class="eyebrow">Messages stay connected to your trade.</p></div></div>'+(list.length?'<div class="record-list trade-records">'+list.map(o=>'<article><div><h3>'+e(o.crop)+'</h3><p>'+e(state.role==='grower'?(o.buyerName||'Business buyer'):farmBy(o.farm)?.name)+'</p><p>'+e(o.messages.at(-1)?.body.slice(0,100)||'Start the conversation.')+'</p></div>'+button('Open conversation','offer-detail',o.id)+'</article>').join('')+'</div>':empty('Make or receive an offer to start a direct conversation.'));
 }
 function tradeHistory() {
   const records = data.history.filter(entry => state.role !== 'grower' || data.orders.find(o=>o.id===entry.order)?.farm === state.farm);
@@ -143,7 +157,7 @@ function farmers() {
   const editing = state.role === "grower";
   return '<div class="section-row"><h2>' + (editing ? "Your farms" : "Growers you can trade with") + '</h2>' +
     (editing ? button("Create farm profile", "edit-farm", "", "primary") : "") + '</div><div class="farm-grid">' +
-    data.farms.map(farm => '<article class="farm-record"><img src="' + e(farm.image) + '" alt="" loading="lazy"><div><p class="eyebrow">' + e(farm.location) + '</p><h3>' + e(farm.name) + '</h3><p>' + e(farm.person) + '</p><div class="actions">' + button("View profile", "farm", farm.id) +
+    data.farms.filter(farm=>!editing||farm.owned).map(farm => '<article class="farm-record"><img src="' + e(farm.image) + '" alt="" loading="lazy"><div><p class="eyebrow">' + e(farm.location) + '</p><h3>' + e(farm.name) + '</h3><p>' + e(farm.person) + '</p><div class="actions">' + button("View profile", "farm", farm.id) +
       (editing ? button("Edit farm", "edit-farm", farm.id) : "") + '</div></div></article>').join("") + '</div>';
 }
 function growerListings() {
@@ -160,14 +174,14 @@ function lotDetails(lot) {
   const owned = state.role === "grower" && lot.farm === state.farm;
   return '<div class="detail-layout"><img class="detail-photo" src="' + photo(lot.category) + '" alt=""><section class="panel"><p class="eyebrow">Crop lot · ' + e(lot.category) + '</p><h2>' + e(lot.crop) + '</h2><p>' + e(farm?.name) + ' · ' + e(farm?.location) + '</p><dl class="facts">' +
     metric("Asking price", money(lot.price) + " / kg") + metric("Available", lot.quantity + " kg") + metric("Grade (grower declared)", lot.grade) +
-    metric("Pickup", lot.pickup) + metric("Harvest", lot.harvest || "Not supplied") + metric("Quality", lot.quality) + '</dl><p>' + e(lot.notes) + '</p><div class="actions">' +
-    (state.role === "buyer" && lot.open && lot.quantity ? button("Make an offer", "new-offer", lot.id, "primary") : "") +
+    metric("Pickup", lot.pickup) + metric("Harvest", lot.harvest || "Not supplied") + metric("Quality", lot.quality) + (lot.sample ? metric("Availability", "Illustrative lot · browse only") : "") + '</dl><p>' + e(lot.notes) + '</p><div class="actions">' +
+    (state.role === "buyer" && !lot.sample && lot.open && lot.quantity ? button("Make an offer", "new-offer", lot.id, "primary") : "") +
     (owned ? button("Edit listing", "edit-lot", lot.id) + (lot.quality.startsWith("Sample") ? "" : button("Run sample quality check", "quality", lot.id)) : "") +
     button("View farm", "farm", lot.farm) + '</div></section></div>';
 }
 function farmDetails(farm) {
   const lots = data.listings.filter(lot => lot.farm === farm.id && lot.open);
-  return hero(farm.name, farm.person + " · " + farm.location, state.role === "grower" ? button("Edit profile", "edit-farm", farm.id, "primary") : "", farm.image) +
+  return hero(farm.name, farm.person + " · " + farm.location, state.role === "grower" && farm.owned ? button("Edit profile", "edit-farm", farm.id, "primary") : "", farm.image) +
     '<p class="farm-bio">' + e(farm.bio || "No farm description yet.") + '</p><div class="section-row"><h2>Available harvest</h2></div><div class="lot-grid">' + listingCards(lots) + '</div>';
 }
 
@@ -193,18 +207,18 @@ function offers() {
   list.reverse();
   if (state.offerSort === "price") list.sort((a,b) => b.price - a.price);
   return '<div class="section-row"><div><h2>' + (state.role === "grower" ? "Incoming offers" : "Your offers") + '</h2><p class="eyebrow">' + list.length + ' records</p></div><label>Compare by<select id="offer-sort"><option value="recent"' + (state.offerSort === "recent" ? " selected" : "") + '>Most recent</option><option value="price"' + (state.offerSort === "price" ? " selected" : "") + '>Highest price per kg</option></select></label></div>' +
-    (list.length ? '<div class="record-list trade-records">' + list.map(offer => '<article><div><h3>' + e(offer.crop) + '</h3><p>' + e(farmBy(offer.farm)?.name) + '</p></div><span>' + e(offer.quantity) + ' kg · ' + money(offer.price) + '/kg<small class="trade-pickup">Pickup: ' + e(offer.pickup) + '</small></span>' + badge(offer.status) + button("Open offer", "offer-detail", offer.id) + '</article>').join("") + '</div>' :
-    empty("Start a conversation by making an offer on a produce lot. Your terms and messages stay together."));
+    (list.length ? '<div class="record-list trade-records">' + list.map(offer => '<article><div><h3>' + e(offer.crop) + '</h3><p>' + e(state.role==='grower'?(offer.buyerName||'Business buyer'):farmBy(offer.farm)?.name) + '</p></div><span>' + e(offer.quantity) + ' kg · ' + money(offer.price) + '/kg<small class="trade-pickup">Pickup: ' + e(offer.pickup) + '</small></span>' + badge(offer.status) + button("Open offer", "offer-detail", offer.id) + '</article>').join("") + '</div>' :
+    empty(state.role==='grower' ? 'Publish your harvest so business buyers can send offers. Compare their terms here.' : 'Make an offer on a produce lot. Your terms and messages stay together.'));
 }
 function thread(offer) {
   return '<section class="panel thread"><h2>Direct messages</h2><div class="messages">' +
-    (offer.messages.length ? offer.messages.map(message => '<div class="message ' + (message.by === state.role ? "own" : "") + '"><small>' + (message.by === "grower" ? e(farmBy(offer.farm)?.person || "Grower") : "Buyer") + ' · ' + e(time(message.at)) + '</small><p>' + e(message.body) + '</p></div>').join("") : empty("No messages yet.")) +
+    (offer.messages.length ? offer.messages.map(message => '<div class="message ' + (message.by === state.role ? "own" : "") + '"><small>' + (message.by === "grower" ? e(farmBy(offer.farm)?.person || "Grower") : e(offer.buyerName||"Buyer")) + ' · ' + e(time(message.at)) + '</small><p>' + e(message.body) + '</p></div>').join("") : empty("No messages yet.")) +
     '</div><form id="message-form" data-offer="' + e(offer.id) + '"><label>Message<input name="message" required maxlength="500" placeholder="Confirm grade, quantity or pickup"></label><button class="primary">Send</button></form></section>';
 }
 function offerDetails(offer) {
   const respond = offer.status === "Pending" && offer.by !== state.role;
   const order = data.orders.find(order => order.offer === offer.id);
-  return '<div class="market-grid"><section class="panel"><p class="eyebrow">' + e(farmBy(offer.farm)?.name) + '</p><h2>' + e(offer.crop) + '</h2>' + badge(offer.status) + '<dl class="facts">' +
+  return '<div class="market-grid"><section class="panel"><p class="eyebrow">' + e(state.role==='grower'?(offer.buyerName||'Business buyer'):farmBy(offer.farm)?.name) + '</p><h2>' + e(offer.crop) + '</h2>' + badge(offer.status) + '<dl class="facts">' +
     metric("Lot asking price", money(listingBy(offer.listing)?.price || offer.price) + " / kg") + metric("Current offer", money(offer.price) + " / kg") +
     metric("Quantity", offer.quantity + " kg") + metric("Offer value", money(offer.quantity * offer.price)) + metric("Pickup", offer.pickup) +
     metric("Last proposal", offer.by === "grower" ? "Grower" : "Buyer") + '</dl><div class="actions">' +
@@ -216,7 +230,7 @@ function orders() {
   const list = data.orders.filter(order => state.role !== "grower" || order.farm === state.farm);
   return '<div class="section-row"><h2>'+(state.view==='deliveries'?'Deliveries':'Orders')+'</h2><span>Agreed terms and delivery status</span></div>' +
     (list.length ? '<div class="record-list trade-records">' + list.slice().reverse().map(order => '<article><div><h3>' + e(order.crop) + '</h3><p>' + e(order.id) + ' · ' + e(farmBy(order.farm)?.name) + '</p></div><span>' + e(order.quantity) + ' kg · ' + money(order.total) + '</span>' + badge(order.status) + button("View order", "order", order.id) + '</article>').join("") + '</div>' :
-    empty("Accept an offer to create an order and reserve the stock."));
+    empty(state.role==='grower' ? 'Your accepted sales will appear here. Review incoming offers to get started.' : 'Agree terms with a grower to create your first purchase.'));
 }
 function orderDetails(order, receivedByQr = false) {
   const steps = ["Accepted", "Packed", "Ready for pickup", "Picked up", "Delivered"];
@@ -230,7 +244,7 @@ function orderDetails(order, receivedByQr = false) {
       const event = order.timeline.find(event => event.event === step);
       return '<li class="' + (index <= status ? "reached" : "") + '"><button type="button" data-action="milestone" data-id="' + index + '" aria-pressed="' + (index === status) + '">' + step + '</button><small>' + (event ? e(time(event.at)) : "Pending") + '</small></li>';
     }).join("") + '</ol><p id="milestone-note" aria-live="polite">Current status: ' + e(order.status) + '.</p><dl class="facts">' + metric("Grower", farm.name + " · " + farm.person) + metric("Origin", farm.location) +
-    metric("Quantity", order.quantity + " kg") + metric("Grade and quality", order.grade + " · " + order.quality) + metric("Pickup", order.pickup) +
+    (!receivedByQr ? metric("Buyer", order.buyerName||"Business buyer") : "") + metric("Quantity", order.quantity + " kg") + metric("Grade and quality", order.grade + " · " + order.quality) + metric("Pickup", order.pickup) +
     metric("Agreed price", money(order.price) + " / kg") + metric("Total", money(order.total)) + metric("Payment", order.payment) + '</dl><div class="actions">' +
     (!receivedByQr && state.role === "grower" && order.farm === state.farm && next ? button("Mark " + next.toLowerCase(), "status", order.id, "primary") : "") +
     (!receivedByQr && state.role === "buyer" && order.payment === "Unpaid" ? button("Record sample payment", "payment", order.id, "primary") : "") +
@@ -240,7 +254,10 @@ function orderDetails(order, receivedByQr = false) {
 }
 
 function render() {
-  if (!batch) { const url = new URL(location.href); url.search = ''; url.searchParams.set('role', state.role); url.searchParams.set('view', state.view || 'overview'); if(state.detail){url.searchParams.set('type',state.detail.type);url.searchParams.set('detail',state.detail.id);} history.replaceState(null,'',url); }
+  if(!screens[state.role][state.view])state.view='overview';
+  if (!batch) { const url = new URL(location.href); url.pathname="/"+state.role; url.search = ''; url.searchParams.set('view', state.view || 'overview'); if(state.detail){url.searchParams.set('type',state.detail.type);url.searchParams.set('detail',state.detail.id);} history.replaceState(null,'',url); }
+  delete document.body.dataset.loading;
+  document.body.dataset.portal=state.role;
   document.body.dataset.view = state.detail ? 'detail' : state.view || 'overview';
   const navigation = screens[state.role];
   if (!navigation[state.view]) state.view = Object.keys(navigation)[0];
@@ -248,11 +265,13 @@ function render() {
     '<button type="button" data-nav="' + key + '"' + (state.view === key ? ' aria-current="page"' : "") + '>' + '<span class="nav-icon" aria-hidden="true">' + icons[key] + '</span>' + e(label) + '</button>').join("");
   const mobileTabs=[['overview','Home'],[state.role==='grower'?'listings':'catalogue',state.role==='grower'?'Crops':'Produce'],['offers','Offers'],['orders','Orders'],['messages','Messages']];
   qs('#mobile-nav').innerHTML=mobileTabs.map(([key,label])=>'<button type="button" data-nav="'+key+'"'+(state.view===key?' aria-current="page"':'')+'><span aria-hidden="true">'+icons[key]+'</span><span>'+label+'</span></button>').join('');
-  document.querySelectorAll("[data-role]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.role === state.role)));
-  qs("#workspace-role").textContent = state.role === "grower" ? farmBy(state.farm)?.name : "Business buyer";
+  qs('#account-button').innerHTML=data.user?'<span class="account-avatar">'+e(data.user.name[0])+'</span><span>'+e(state.role==='grower'?'Grower portal':'Buyer portal')+'</span>':'Sign in';
+  qs('#sidebar-identity').textContent=data.user?data.user.organization:'';
+  if(batch){qs('#app-nav').hidden=true;qs('#mobile-nav').hidden=true;}
+  qs("#workspace-role").textContent = batch ? "Order trace" : data.user.organization;
   const farmContext = qs("#farm-context");
   farmContext.hidden = state.role !== "grower" || Boolean(batch);
-  farmContext.innerHTML = farmContext.hidden ? "" : '<label>Active farm<select id="farm-select">' + data.farms.map(item =>
+  farmContext.innerHTML = farmContext.hidden ? "" : '<label>Active farm<select id="farm-select">' + data.farms.filter(item=>item.owned).map(item =>
     '<option value="' + e(item.id) + '"' + (item.id === state.farm ? " selected" : "") + '>' + e(item.name) + '</option>').join("") + '<option value="__manage">Manage farms…</option></select></label>';
   qs("#view-title").textContent = batch ? "Batch record" : state.detail ? "Trade details" : navigation[state.view];
   if (batch) {
@@ -337,11 +356,18 @@ document.addEventListener("click", event => {
     return;
   }
   if (!target || !data || busy) return;
-  const { role, nav, action, id } = target.dataset;
-  if (role) { state.role = role; navigate(Object.keys(screens[role])[0]); return; }
+  if(target.id==='account-button'){
+    if(!data.user){location.href='/login';return;}
+    qs('#account-details').innerHTML='<p class="eyebrow">'+e(state.role==='grower'?'Grower portal':'Buyer portal')+'</p><h3>'+e(data.user.organization)+'</h3><dl class="facts">'+metric('Name',data.user.name)+metric('Email',data.user.email)+metric('Location',data.user.location||'Not supplied')+'</dl>';
+    qs('#account-dialog').showModal();return;
+  }
+  const { nav, action, id } = target.dataset;
+
   if (nav) { navigate(nav); return; }
   if (!action) return;
   if (action === "browse") { navigate(state.role === "grower" ? "listings" : "catalogue"); return; }
+  if (action === 'buyer-orders') {navigate('orders');return;}
+  if (action === 'find-growers') {navigate('farmers');return;}
   if (action === "market-view") { navigate('market'); return; }
   if (action === "back") { navigate(state.view); return; }
   if (action === "clear") { Object.keys(state.filters).forEach(key => { state.filters[key] = ""; }); render(); return; }
@@ -358,7 +384,7 @@ document.addEventListener("click", event => {
     state.detail = { type: types[action], id };
     notice("");
     render();
-    scrollTo({ top: 0, behavior: "instant" });
+    content.scrollTo({ top: 0, behavior: "instant" });
     return;
   }
   const editors = { "edit-farm": "farm", "edit-lot": "listing", "new-offer": "offer", counter: "counter" };
@@ -410,7 +436,16 @@ window.addEventListener("focus", async () => {
     render();
     if (state.role === "grower" && state.view === "listings" && params.get("new") === "1") openEditor("listing");
   } catch (error) {
+    if(error.redirect)return;
+    delete document.body.dataset.loading;
     content.setAttribute("aria-busy", "false");
     notice(error.message, true);
   }
 })();
+
+qs('#close-account').addEventListener('click',()=>qs('#account-dialog').close());
+qs('#sign-out').addEventListener('click',async()=>{
+  qs('#sign-out').disabled=true;
+  try{const result=await fetch('/api/auth/sign-out',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});if(!result.ok)throw Error('Could not sign out. Try again.');location.replace('/login?portal='+state.role);}
+  catch(error){notice(error.message,true);qs('#account-dialog').close();qs('#sign-out').disabled=false;}
+});
