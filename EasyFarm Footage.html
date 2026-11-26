@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#141a14">
+  <title>EasyFarm — Footage Library</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    :root{color-scheme:dark;--bg:#141a14;--ink:#f3efdd;--dim:#b2b9a7;--line:#394235;--lime:#d7ec9b;--serif:"Instrument Serif",Georgia,serif}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "DM Sans",sans-serif}
+    a{color:inherit}
+    button,select{font:inherit}
+    button{cursor:pointer}
+    :focus-visible{outline:2px solid var(--lime);outline-offset:4px}
+    .shell{width:min(1410px,100%);margin:auto;padding-inline:clamp(18px,4.5vw,72px)}
+    header{border-bottom:1px solid var(--line)}
+    header .shell{height:68px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .brand{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:700;letter-spacing:-.045em}
+    .mark{width:28px;height:28px;border:1px solid #8ca168;border-radius:50%;display:grid;place-items:center;color:var(--lime);font-family:var(--serif);font-size:21px;line-height:1}
+    .section-label{font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--dim);font-weight:700}
+    .intro{display:flex;align-items:end;justify-content:space-between;gap:24px;margin:clamp(28px,4.7vw,66px) 0 25px}
+    h1,h2,p{margin:0}
+    h1{font:clamp(53px,8vw,111px)/.87 var(--serif);letter-spacing:-.035em}
+    h1 em{color:var(--lime);font-weight:400}
+    .intro p{max-width:24ch;color:var(--dim);text-wrap:balance;padding-bottom:3px}
+    .viewer{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,26%);border:1px solid var(--line);background:#1b2318}
+    .screen{aspect-ratio:16/9;background:#0c110a;position:relative;min-width:0}
+    video{display:block;width:100%;height:100%;object-fit:contain}
+    .play{position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%);border:1px solid #e7f2c963;background:#0c150bd9;color:var(--ink);width:66px;height:66px;border-radius:50%;font-size:21px}
+    [hidden]{display:none!important}
+    .notes{padding:clamp(19px,3vw,37px);display:flex;flex-direction:column;justify-content:space-between;gap:28px;border-left:1px solid var(--line)}
+    h2{font:clamp(34px,4vw,59px)/.92 var(--serif);letter-spacing:-.02em;margin-block:13px}
+    .description{color:var(--dim);max-width:25ch}
+    .spec{margin:16px 0 0;color:var(--lime);font-size:12px}
+    .tools{display:grid;gap:12px}
+    .speed{display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding-bottom:11px;color:var(--dim);font-size:13px}
+    select{border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:5px 8px}
+    .links{display:flex;flex-wrap:wrap;gap:7px 15px;font-size:13px}
+    .links a{text-underline-offset:4px}
+    .status{font-size:12px;color:#f1c48a}
+    .filmstrip-head{display:flex;justify-content:space-between;align-items:center;margin:27px 0 12px}
+    .arrows{display:flex;gap:6px}
+    .arrows button{width:36px;height:33px;background:none;border:1px solid var(--line);color:var(--ink)}
+    .arrows button:hover{border-color:var(--lime);color:var(--lime)}
+    .arrows .sequence{width:auto;padding-inline:11px;margin-right:4px;font-size:12px}
+    .sequence[aria-pressed="true"]{border-color:var(--lime);color:var(--lime)}
+    .filmstrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:20px}
+    .library-end{margin-bottom:42px}
+    .collection-title{margin:24px 0 12px}
+    .clip{text-align:left;background:none;border:1px solid var(--line);padding:0;color:var(--ink);min-width:0}
+    .clip:hover,.clip[aria-pressed="true"]{border-color:var(--lime)}
+    .clip[aria-pressed="true"]{background:#202a1b}
+    .thumb{display:block;aspect-ratio:2.15;background:#272e1a;overflow:hidden}
+    .thumb img{display:block;width:100%;height:100%;object-fit:cover}
+    .clip-label{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 10px}
+    .clip-label span:last-child{color:var(--dim);font-size:10px;white-space:nowrap}
+    @media(max-width:760px){
+      header .shell{height:54px}
+      .intro{display:block}.intro p{margin-top:12px;max-width:none}
+      .viewer{grid-template-columns:1fr}.notes{border-left:0;border-top:1px solid var(--line);gap:18px}
+      .notes h2{margin-block:8px}.spec{margin-top:9px}
+      .filmstrip{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+  </style>
+</head>
+<body>
+  <header><div class="shell"><div class="brand"><span class="mark" aria-hidden="true">e</span>EasyFarm</div><span class="section-label">Footage library</span></div></header>
+  <main class="shell">
+    <div class="intro"><h1>Fresh <em>in motion.</em></h1><p>Harvest, rinse and pack. Select a shot to preview it in the hero frame.</p></div>
+    <section class="viewer" aria-label="Clip preview">
+      <div class="screen">
+        <video id="player" controls muted playsinline loop preload="metadata" aria-label="Selected agriculture clip"></video>
+        <button id="play" type="button" class="play" aria-label="Play selected clip">▶</button>
+      </div>
+      <div class="notes">
+        <div>
+          <div id="phase" class="section-label"></div>
+          <h2 id="clip-title"></h2>
+          <p id="description" class="description"></p>
+          <p id="spec" class="spec"></p>
+        </div>
+        <div class="tools">
+          <label class="speed">Playback speed <select id="speed"><option value="1">1×</option><option value=".75">0.75×</option><option value=".5">0.5×</option></select></label>
+          <div class="links"><a id="source" target="_blank" rel="noopener">Full source ↗</a><a id="download" download>Save MP4 ↓</a></div>
+          <p id="status" class="status" role="status" hidden></p>
+        </div>
+      </div>
+    </section>
+    <div class="filmstrip-head"><div class="section-label">Fresh produce</div><div class="arrows"><button id="sequence" class="sequence" aria-pressed="false">Play sequence</button><button id="previous" aria-label="Previous clip">←</button><button id="next" aria-label="Next clip">→</button></div></div>
+    <nav id="filmstrip" class="filmstrip" aria-label="Fresh produce footage"></nav>
+    <div class="collection-title section-label">Antigravity collection</div>
+    <nav id="antigravity-strip" class="filmstrip library-end" aria-label="Antigravity footage"></nav>
+  </main>
+  <script>
+    const freshClips = [
+      {id:10787015, path:"close-up-on-picking-carrots", title:"Carrots from the soil", short:"Carrot harvest", phase:"Harvest", description:"Freshly lifted carrots in the field, with bright orange roots against dark soil.", quality:"4K · 25 fps · 4.4 sec", label:"4K", local:"carrots-from-soil-4k.mp4"},
+      {id:5479114, path:"a-woman-harvesting-bell-peppers", title:"Peppers off the plant", short:"Pepper harvest", phase:"Harvest", description:"A grower reaches for red bell peppers among green greenhouse foliage.", quality:"4K · 25 fps · 4.9 sec", label:"4K", local:"pepper-harvest-4k.mp4"},
+      {id:3872466, path:"washing-fresh-vegetables-in-running-water", title:"The fresh rinse", short:"Mixed-veg rinse", phase:"Wash", description:"Running water over peppers, broccoli, carrots and greens.", quality:"1080p · 25 fps", label:"HD", local:"mixed-vegetables-rinse.mp4"},
+      {id:40848081, path:"sorting-and-storing-fresh-green-vegetables", title:"Greens into crates", short:"Crate sorting", phase:"Sort", description:"A worker handles a blue crate among fresh green produce. Try 0.5× on this 60 fps shot.", quality:"4K · 60 fps · 2.6 sec", label:"4K / 60", local:"greens-into-crates-4k60.mp4"}
+    ];
+    const antigravityClips = [
+      {"asset":"assets/01-aerial-crop-fields-sunrise-4k.mp4","poster":"assets/posters/01-aerial-crop-fields-sunrise-4k.jpg","title":"Aerial Crop Fields at Sunrise","short":"Aerial Crop Fields at Sunrise","phase":"Farm Origin","description":"Aerial view across long rows of crops.","quality":"4K DCI · 29.97 fps · 16.1 sec","label":"4K"},
+      {"asset":"assets/02-farmer-golden-field-4k.mp4","poster":"assets/posters/02-farmer-golden-field-4k.jpg","title":"Grower Standing in Pasture Field","short":"Grower Standing in Pasture Field","phase":"Farm Origin","description":"A grower stands in an open pasture.","quality":"4K DCI · 25 fps · 22.0 sec","label":"4K"},
+      {"asset":"assets/03-tomato-harvest-4k.mp4","poster":"assets/posters/03-tomato-harvest-4k.jpg","title":"Greenhouse Tomato Harvesting","short":"Greenhouse Tomato Harvesting","phase":"Harvest & Quality","description":"Tomatoes are picked inside a greenhouse.","quality":"4K UHD · 25 fps · 9.2 sec","label":"4K"},
+      {"asset":"assets/04-vegetable-basket-harvest-4k.mp4","poster":"assets/posters/04-vegetable-basket-harvest-4k.jpg","title":"Fresh Harvest Basket Presentation","short":"Fresh Harvest Basket Presentation","phase":"Direct B2B Trade","description":"Fresh vegetables are gathered in a wicker basket.","quality":"4K UHD · 25 fps · 8.1 sec","label":"4K"},
+      {"asset":"assets/05-warehouse-qr-scanning-4k.mp4","poster":"assets/posters/05-warehouse-qr-scanning-4k.jpg","title":"Warehouse Batch & QR Scanning","short":"Warehouse Batch & QR Scanning","phase":"QR & Logistics","description":"A warehouse worker scans stock in a storage aisle.","quality":"4K UHD · 25 fps · 10.7 sec","label":"4K"},
+      {"asset":"assets/06-tablet-inventory-verification-4k.mp4","poster":"assets/posters/06-tablet-inventory-verification-4k.jpg","title":"Digital Tablet Quality & Stock Audit","short":"Digital Tablet Quality & Stock Audit","phase":"QR & Logistics","description":"A worker checks inventory on a tablet.","quality":"4K UHD · 25 fps · 18.6 sec","label":"4K"},
+      {"asset":"assets/07-tomato-macro-detail-4k.mp4","poster":"assets/posters/07-tomato-macro-detail-4k.jpg","title":"Fresh Washed Tomato Macro Detail","short":"Fresh Washed Tomato Macro Detail","phase":"Harvest & Quality","description":"Water droplets on the surface of a red tomato.","quality":"4K UHD · 29.97 fps · 4.4 sec","label":"4K"},
+      {"asset":"assets/08-couple-harvesting-4k.mp4","poster":"assets/posters/08-couple-harvesting-4k.jpg","title":"Growers Harvesting Organic Greens","short":"Growers Harvesting Organic Greens","phase":"Farm Origin","description":"Two growers harvest leafy greens in a garden.","quality":"4K UHD · 25 fps · 3.4 sec","label":"4K"},
+      {"asset":"assets/09-senior-grower-produce-4k.mp4","poster":"assets/posters/09-senior-grower-produce-4k.jpg","title":"Grower Inspecting Berry Harvest","short":"Grower Inspecting Berry Harvest","phase":"Harvest & Quality","description":"A grower examines produce at a market stand.","quality":"4K UHD · 30 fps · 9.5 sec","label":"4K"},
+      {"asset":"assets/10-crate-delivery-handoff-4k.mp4","poster":"assets/posters/10-crate-delivery-handoff-4k.jpg","title":"Produce Crate Delivery Handoff","short":"Produce Crate Delivery Handoff","phase":"Direct B2B Trade","description":"A delivery worker carries a crate of fresh vegetables.","quality":"4K UHD · 30 fps · 7.3 sec","label":"4K"},
+      {"asset":"assets/11-farmer-buyer-handshake-4k.mp4","poster":"assets/posters/11-farmer-buyer-handshake-4k.jpg","title":"B2B Trade Agreement Handshake","short":"B2B Trade Agreement Handshake","phase":"Direct B2B Trade","description":"Two people shake hands across a table.","quality":"4K DCI · 25 fps · 14.2 sec","label":"4K"},
+      {"asset":"assets/12-logistics-distribution-hub-4k.mp4","poster":"assets/posters/12-logistics-distribution-hub-4k.jpg","title":"Aerial Freight & Distribution Park","short":"Aerial Freight & Distribution Park","phase":"QR & Logistics","description":"Aerial view of a freight and distribution park.","quality":"4K UHD · 25 fps · 8.6 sec","label":"4K"},
+      {"asset":"assets/13-produce-basket-handoff-1440p.mp4","poster":"assets/posters/13-produce-basket-handoff-1440p.jpg","title":"Farm-to-Buyer Basket Exchange","short":"Farm-to-Buyer Basket Exchange","phase":"Direct B2B Trade","description":"Two growers pass a basket of vegetables.","quality":"1440p QHD · 25 fps · 4.6 sec","label":"1440p"},
+      {"asset":"assets/14-growers-sharing-lettuce-1440p.mp4","poster":"assets/posters/14-growers-sharing-lettuce-1440p.jpg","title":"Growers Inspecting Fresh Harvest","short":"Growers Inspecting Fresh Harvest","phase":"Direct B2B Trade","description":"Two growers share freshly harvested lettuce.","quality":"1440p QHD · 25 fps · 5.9 sec","label":"1440p"},
+      {"asset":"assets/15-tomatoes-on-conveyor-1080p.mp4","poster":"assets/posters/15-tomatoes-on-conveyor-1080p.jpg","title":"Commercial Tomato Sorting Line","short":"Commercial Tomato Sorting Line","phase":"Harvest & Quality","description":"Tomatoes move through parallel conveyor lanes.","quality":"1080p HD · 29.97 fps · 4.4 sec","label":"HD"}
+    ];
+    const clips = [...freshClips, ...antigravityClips];
+
+    const player = document.querySelector("#player");
+    const play = document.querySelector("#play");
+    const speed = document.querySelector("#speed");
+    const strip = document.querySelector("#filmstrip");
+    const antigravityStrip = document.querySelector("#antigravity-strip");
+    const status = document.querySelector("#status");
+    const source = document.querySelector("#source");
+    const sequence = document.querySelector("#sequence");
+    const poster = clip => clip.poster ?? `hero-footage/fresh-produce/poster-${clip.id}.jpg`;
+    let current = 0;
+
+    const buttons = clips.map((clip, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "clip";
+      button.innerHTML = `<span class="thumb"><img src="${poster(clip)}" alt=""></span><span class="clip-label"><span>${clip.short}</span><span>${clip.label}</span></span>`;
+      button.querySelector("img").addEventListener("error", event => { event.target.hidden = true; });
+      button.addEventListener("click", () => {
+        select(index, true);
+        const viewer = document.querySelector(".viewer");
+        if (viewer.getBoundingClientRect().top < 0) viewer.scrollIntoView({block:"start"});
+      });
+      (clip.asset ? antigravityStrip : strip).append(button);
+      return button;
+    });
+
+    function message(text = "") {
+      status.textContent = text;
+      status.hidden = !text;
+    }
+
+    function select(index, autoplay = false) {
+      current = (index + clips.length) % clips.length;
+      const clip = clips[current];
+      player.pause();
+      player.poster = poster(clip);
+      const localFile = clip.asset ?? `hero-footage/fresh-produce/${clip.local}`;
+      player.src = clip.asset ?? localFile.replace(/\.mp4$/, ".webm");
+      player.playbackRate = Number(speed.value);
+      document.querySelector("#phase").textContent = clip.phase;
+      document.querySelector("#clip-title").textContent = clip.title;
+      document.querySelector("#description").textContent = clip.description;
+      document.querySelector("#spec").textContent = clip.quality;
+      source.href = clip.asset ? "Antigravity Footage.html" : `https://www.pexels.com/video/${clip.path}-${clip.id}/`;
+      source.textContent = clip.asset ? "Antigravity gallery ↗" : "Full source ↗";
+      document.querySelector("#download").href = localFile;
+      buttons.forEach((button, i) => button.setAttribute("aria-pressed", String(i === current)));
+      play.hidden = false;
+      message();
+      if (autoplay) start();
+    }
+
+    function start() {
+      message();
+      player.play().catch(error => {
+        if (error.name !== "AbortError") message("Playback could not start. Open the source to watch or download.");
+      });
+    }
+
+    player.addEventListener("playing", () => { play.hidden = true; message(); });
+    player.addEventListener("error", () => message("Could not open the local clip. Keep this page with its footage folders."));
+    player.addEventListener("ended", () => {
+      if (sequence.getAttribute("aria-pressed") === "true") select(current + 1, true);
+    });
+    sequence.addEventListener("click", () => {
+      const active = sequence.getAttribute("aria-pressed") !== "true";
+      sequence.setAttribute("aria-pressed", String(active));
+      sequence.textContent = active ? "Loop one shot" : "Play sequence";
+      player.loop = !active;
+      if (active && player.paused) start();
+    });
+    play.addEventListener("click", start);
+    speed.addEventListener("change", () => { player.playbackRate = Number(speed.value); });
+    document.querySelector("#previous").addEventListener("click", () => select(current - 1, true));
+    document.querySelector("#next").addEventListener("click", () => select(current + 1, true));
+    select(0);
+  </script>
+</body>
+</html>

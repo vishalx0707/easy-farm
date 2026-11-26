@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="EasyFarm connects growers directly with traders, wholesalers and retailers to list, buy and trace fresh produce.">
+<title>EasyFarm — Trade fresh produce directly</title>
+<link rel="preload" href="assets/Geist.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="landing.css">
+</head>
+<body>
+<main id="top">
+  <section class="hero" aria-labelledby="hero-title">
+    <video id="film" muted playsinline loop preload="none" poster="assets/hero/easyfarm-film-poster.webp" aria-label="EasyFarm film, from produce handoff to crop fields" data-src="assets/hero/easyfarm-film-compact.mp4"></video>
+    <header class="topbar">
+      <a class="wordmark" href="#top" aria-label="EasyFarm home"><span class="seed" aria-hidden="true"></span>EasyFarm</a>
+      <nav aria-label="Primary"><a href="#marketplace">Marketplace</a><a href="#trace">Order tracking</a></nav>
+    </header>
+    <div class="hero-body">
+      <h1 id="hero-title">Buy direct.<br>Sell your harvest.</h1>
+      <div class="hero-aside">
+        <p class="hero-description">Farmers list crops and compare offers. Traders, wholesalers and retailers buy directly from farms and track their orders.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#marketplace" data-role="grower">For growers <span aria-hidden="true">↗</span></a>
+          <a class="button secondary" href="#marketplace" data-role="buyer">Source produce <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="trade-wrap" id="marketplace" aria-labelledby="trade-heading">
+    <div class="trade-intro">
+      <h2 id="trade-heading">Follow the trade.</h2>
+      <p>One pepper lot, from the grower’s listing to the buyer’s delivery. Scroll through the trade or choose a step.</p>
+    </div>
+    <div class="story-track" id="story-track">
+    <div class="workspace" aria-label="Interactive EasyFarm marketplace preview">
+      <header class="workspace-header">
+        <div class="workspace-name"><span class="seed" aria-hidden="true"></span><span>EasyFarm Marketplace</span></div>
+        <span class="preview-label">Interactive example</span>
+        <div class="role-switch" aria-label="Choose a marketplace role">
+          <button type="button" data-view="buyer" aria-pressed="true">Buyer</button>
+          <button type="button" data-view="grower" aria-pressed="false">Grower</button>
+        </div>
+      </header>
+      <div class="workspace-layout">
+        <nav class="journey" aria-label="Trade stages">
+          <button type="button" data-stage="0" aria-current="step">Discover the farm</button>
+          <button type="button" data-stage="1">View the crop lot</button>
+          <button type="button" data-stage="2">Compare the price</button>
+          <button type="button" data-stage="3">Agree to terms</button>
+          <button type="button" data-stage="4">Track delivery</button>
+        </nav>
+        <div class="workspace-pane">
+          <div class="lot-strip"><span><strong>Red bell peppers</strong> · Meadow Lane Farm</span><span id="lot-state">Available · 240 kg</span></div>
+          <div id="stage-pane" class="stage-pane" aria-live="polite"></div>
+          <div class="workspace-footer">
+            <span id="journey-context"></span>
+            <button type="button" id="trade-next">View crop lot <span aria-hidden="true">→</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+    <noscript>The interactive preview requires JavaScript. EasyFarm connects buyers and growers to list crops, compare prices, agree on orders and track deliveries.</noscript>
+  </section>
+  <section class="conversion" aria-labelledby="conversion-title">
+    <div class="trade-wrap conversion-inner">
+      <div><h2 id="conversion-title">What are you trading?</h2><p>Explore EasyFarm from either side of the deal.</p></div>
+      <div class="conversion-paths">
+        <a href="app.html?role=grower&view=listings&new=1"><span><strong>List your harvest</strong><small>Show buyers what’s ready to sell.</small></span><span aria-hidden="true">↗</span></a>
+        <a href="app.html?role=buyer"><span><strong>Source produce</strong><small>See what’s available direct from growers.</small></span><span aria-hidden="true">↗</span></a>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="site-footer"><div class="trade-wrap"><a class="wordmark" href="#top"><span class="seed" aria-hidden="true"></span>EasyFarm</a><a href="#top">Back to top ↑</a></div></footer>
+<script src="landing.js" defer></script>
+</body>
+</html>

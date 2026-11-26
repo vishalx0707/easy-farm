@@ -1,0 +1,1760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EasyFarm — 4K Hero Loop Studio &amp; Supply-Chain Footage Navigator</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231F5C40'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Georgia,serif' font-size='28' font-weight='bold' fill='%23F5E6C8'%3EEF%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-cream: #F6F3EB;
+      --bg-surface: #FFFFFF;
+      --bg-subtle: #EDE8DC;
+      --bg-hero: #0D130F;
+      --ink-primary: #172019;
+      --ink-secondary: #4D594F;
+      --ink-muted: #768278;
+      --border-hairline: #DFD9CA;
+      --accent-forest: #1F5C40;
+      --accent-sage: #2E7D57;
+      --accent-amber: #C97B1E;
+      --accent-gold: #E5A54B;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      --hero-blur: 0px;
+      --hero-scrim: 0.56;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      background: var(--bg-cream);
+      color: var(--ink-primary);
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.5;
+    }
+
+    button, input, select {
+      font-family: inherit;
+    }
+
+    /* ---------------- TOP BAR ---------------- */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 32px;
+      background: rgba(13, 19, 15, 0.72);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+      color: #F4F1EA;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(145deg, #2E7D57, #1A4731);
+      border: 1px solid rgba(229, 165, 75, 0.45);
+      display: grid;
+      place-items: center;
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 18px;
+      color: #F5E6C8;
+    }
+
+    .brand-text strong {
+      display: block;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-text span {
+      display: block;
+      font-size: 11px;
+      color: rgba(244, 241, 234, 0.68);
+      font-family: var(--font-mono);
+    }
+
+    .topbar-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-pill {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #F4F1EA;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.18s ease, border-color 0.18s ease;
+    }
+
+    .nav-pill:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .nav-pill.accent {
+      background: #2E7D57;
+      border-color: #3E9A6E;
+    }
+
+    .nav-pill.accent:hover {
+      background: #256848;
+    }
+
+    /* ---------------- HERO CINEMA SIMULATOR ---------------- */
+    .hero {
+      position: relative;
+      min-height: 92vh;
+      width: 100%;
+      background: var(--bg-hero);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-top: 72px;
+    }
+
+    .hero-stage {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #0D130F;
+    }
+
+    .hero-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transform: scale(1.035);
+      filter: blur(var(--hero-blur));
+      transition: opacity 1.15s cubic-bezier(0.22, 1, 0.36, 1), transform 8s ease-out;
+      will-change: opacity, transform, filter;
+    }
+
+    .hero-video.active {
+      opacity: 1;
+      transform: scale(1.01);
+      z-index: 2;
+    }
+
+    .hero-video.fading-out {
+      opacity: 0;
+      z-index: 1;
+    }
+
+    .hero-scrim {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      background:
+        linear-gradient(180deg, rgba(11, 16, 12, 0.55) 0%, rgba(11, 16, 12, calc(var(--hero-scrim) * 0.65)) 45%, rgba(11, 16, 12, calc(var(--hero-scrim) + 0.3)) 100%),
+        radial-gradient(circle at 18% 58%, rgba(14, 22, 16, calc(var(--hero-scrim) * 0.85)) 0%, transparent 64%);
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 5;
+      max-width: 1360px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 40px 32px 26px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(300px, 400px);
+      gap: 32px;
+      align-items: end;
+    }
+
+    .hero-copy {
+      color: #F8F5EE;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .hero-copy.hidden-overlay {
+      opacity: 0.08;
+      pointer-events: none;
+    }
+
+    .trust-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(21, 32, 24, 0.72);
+      border: 1px solid rgba(229, 165, 75, 0.42);
+      backdrop-filter: blur(8px);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: #F4DFAF;
+      margin-bottom: 18px;
+    }
+
+    .trust-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #52C48A;
+      box-shadow: 0 0 0 4px rgba(82, 196, 138, 0.2);
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-weight: 500;
+      font-size: clamp(2.35rem, 4.4vw, 4.1rem);
+      line-height: 1.06;
+      letter-spacing: -0.025em;
+      margin: 0 0 16px;
+      max-width: 16ch;
+      text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .hero-title em {
+      font-style: italic;
+      color: #F0B65E;
+    }
+
+    .hero-subtitle {
+      font-size: 16px;
+      line-height: 1.6;
+      color: rgba(248, 245, 238, 0.86);
+      max-width: 54ch;
+      margin: 0 0 24px;
+    }
+
+    .hero-cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn-primary {
+      background: #E5A54B;
+      color: #161C15;
+      border: none;
+      padding: 12px 22px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .btn-primary:hover {
+      background: #EEB562;
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.1);
+      color: #F8F5EE;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      backdrop-filter: blur(8px);
+      transition: background 0.15s ease;
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .hero-metrics {
+      margin-top: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.14);
+      font-size: 12px;
+      color: rgba(248, 245, 238, 0.72);
+    }
+
+    .hero-metrics div strong {
+      display: block;
+      font-size: 16px;
+      color: #FFFFFF;
+      font-family: var(--font-mono);
+      font-weight: 500;
+    }
+
+    /* ---------------- HERO DIRECTOR CONTROLS ---------------- */
+    .director-panel {
+      background: rgba(17, 24, 19, 0.82);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 16px;
+      padding: 18px;
+      color: #F4F1EA;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    .director-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .director-head span {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #E5A54B;
+    }
+
+    .now-playing-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0 0 4px;
+    }
+
+    .now-playing-meta {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: rgba(244, 241, 234, 0.68);
+      margin-bottom: 14px;
+    }
+
+    .control-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      color: rgba(244, 241, 234, 0.82);
+    }
+
+    .slider-row input[type="range"] {
+      flex: 1;
+      accent-color: #E5A54B;
+      cursor: pointer;
+    }
+
+    .slider-row output {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      min-width: 40px;
+      text-align: right;
+      color: #F4DFAF;
+    }
+
+    .btn-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .ctrl-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #F4F1EA;
+      padding: 7px 6px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .ctrl-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .ctrl-btn.active {
+      background: #2E7D57;
+      border-color: #46A375;
+    }
+
+    /* ---------------- HERO TIMELINE RAIL ---------------- */
+    .hero-rail-wrap {
+      position: relative;
+      z-index: 5;
+      max-width: 1360px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 32px 24px;
+    }
+
+    .hero-rail {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 8px;
+    }
+
+    .rail-item {
+      position: relative;
+      background: rgba(17, 24, 19, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      padding: 8px 10px;
+      color: rgba(244, 241, 234, 0.78);
+      text-align: left;
+      cursor: pointer;
+      overflow: hidden;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .rail-item:hover {
+      background: rgba(28, 38, 31, 0.85);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .rail-item.active {
+      border-color: #E5A54B;
+      background: rgba(28, 38, 31, 0.92);
+      color: #FFFFFF;
+    }
+
+    .rail-item .rail-num {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: #E5A54B;
+      display: block;
+    }
+
+    .rail-item .rail-name {
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+    }
+
+    .rail-progress {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: 3px;
+      width: 0%;
+      background: #E5A54B;
+      transition: width 0.1s linear;
+    }
+
+    /* ---------------- CATALOG & NAVIGATOR SECTION ---------------- */
+    .catalog-shell {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 48px 32px 84px;
+    }
+
+    .section-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 24px;
+      margin-bottom: 28px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-hairline);
+    }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-forest);
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.75rem, 3vw, 2.5rem);
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      margin: 0 0 8px;
+    }
+
+    .section-desc {
+      margin: 0;
+      color: var(--ink-secondary);
+      max-width: 62ch;
+      font-size: 15px;
+    }
+
+    .ref-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+      padding: 10px 14px 10px 10px;
+      max-width: 380px;
+    }
+
+    .ref-card img {
+      width: 84px;
+      height: 52px;
+      object-fit: cover;
+      border-radius: 7px;
+      flex-shrink: 0;
+    }
+
+    .ref-card strong {
+      display: block;
+      font-size: 12.5px;
+      margin-bottom: 2px;
+    }
+
+    .ref-card span {
+      display: block;
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      line-height: 1.35;
+    }
+
+    /* ---------------- FILTER & SEARCH BAR ---------------- */
+    .toolbar {
+      position: sticky;
+      top: 63px;
+      z-index: 25;
+      background: rgba(246, 243, 235, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 14px 0;
+      margin-bottom: 26px;
+      border-bottom: 1px solid var(--border-hairline);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .tab-btn {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      color: var(--ink-secondary);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn:hover {
+      border-color: var(--accent-forest);
+      color: var(--ink-primary);
+    }
+
+    .tab-btn.active {
+      background: var(--ink-primary);
+      border-color: var(--ink-primary);
+      color: #F6F3EB;
+    }
+
+    .toolbar-right {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-input, .res-select {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: 9px;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: var(--ink-primary);
+      outline: none;
+    }
+
+    .search-input {
+      width: 220px;
+    }
+
+    .search-input:focus, .res-select:focus {
+      border-color: var(--accent-forest);
+    }
+
+    /* ---------------- VIDEO CARD GRID ---------------- */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 22px;
+    }
+
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 18px 40px rgba(23, 32, 25, 0.08);
+      border-color: #C7BEA9;
+    }
+
+    .card-media {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      background: #141A15;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .card-media img,
+    .card-media video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card-media video {
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .card-media.previewing video {
+      opacity: 1;
+    }
+
+    .badge-row {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .res-badge {
+      background: rgba(13, 19, 15, 0.78);
+      backdrop-filter: blur(8px);
+      color: #F4F1EA;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 4px 9px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .res-badge.uhd {
+      border-color: rgba(229, 165, 75, 0.55);
+      color: #F6D89E;
+    }
+
+    .stage-badge {
+      background: rgba(246, 243, 235, 0.92);
+      color: var(--ink-primary);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 6px;
+    }
+
+    .hover-hint {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      z-index: 3;
+      background: rgba(13, 19, 15, 0.72);
+      color: #FFFFFF;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      padding: 3px 8px;
+      border-radius: 5px;
+      pointer-events: none;
+    }
+
+    .card-body {
+      padding: 18px 20px 18px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: 10px;
+    }
+
+    .card-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .card-title {
+      font-size: 16.5px;
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+
+    .card-desc {
+      margin: 0;
+      font-size: 13.5px;
+      color: var(--ink-secondary);
+      line-height: 1.5;
+    }
+
+    .card-specs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-muted);
+      padding-top: 6px;
+    }
+
+    .card-specs span {
+      background: var(--bg-cream);
+      padding: 3px 8px;
+      border-radius: 5px;
+      border: 1px solid var(--border-hairline);
+    }
+
+    .card-actions {
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-hairline);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border-hairline);
+      background: var(--bg-cream);
+      color: var(--ink-primary);
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .action-btn:hover {
+      background: var(--bg-subtle);
+    }
+
+    .action-btn.in-loop {
+      background: #E8F4ED;
+      border-color: #96CEB0;
+      color: #1A5236;
+    }
+
+    .action-btn.primary {
+      background: var(--ink-primary);
+      border-color: var(--ink-primary);
+      color: #F6F3EB;
+    }
+
+    .action-btn.primary:hover {
+      background: #28362B;
+    }
+
+    /* ---------------- CODE EXPORT DRAWER ---------------- */
+    .export-section {
+      margin-top: 56px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-lg);
+      padding: 26px;
+    }
+
+    .export-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .export-head h3 {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 500;
+      margin: 0 0 4px;
+    }
+
+    .export-head p {
+      margin: 0;
+      font-size: 13.5px;
+      color: var(--ink-secondary);
+    }
+
+    pre.snippet {
+      margin: 0;
+      background: #131914;
+      color: #E5E9E2;
+      padding: 18px;
+      border-radius: 12px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      overflow-x: auto;
+      line-height: 1.55;
+    }
+
+    /* ---------------- LIGHTBOX INSPECTOR ---------------- */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      background: rgba(10, 14, 11, 0.92);
+      backdrop-filter: blur(12px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .lightbox.open {
+      display: flex;
+    }
+
+    .lightbox-panel {
+      width: min(1140px, 100%);
+      background: #151C17;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 18px;
+      overflow: hidden;
+      color: #F4F1EA;
+      box-shadow: 0 32px 90px rgba(0, 0, 0, 0.6);
+    }
+
+    .lightbox-video-wrap {
+      position: relative;
+      background: #000;
+      aspect-ratio: 16 / 9;
+      max-height: 68vh;
+      width: 100%;
+    }
+
+    .lightbox-video-wrap video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .lightbox-footer {
+      padding: 18px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .lightbox-info h3 {
+      margin: 0 0 4px;
+      font-size: 18px;
+    }
+
+    .lightbox-info p {
+      margin: 0;
+      font-size: 13px;
+      color: rgba(244, 241, 234, 0.72);
+    }
+
+    .lightbox-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .kbd-hint {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: rgba(244, 241, 234, 0.55);
+      margin-left: 8px;
+    }
+
+    /* ---------------- RESPONSIVE ---------------- */
+    @media (max-width: 960px) {
+      .hero-inner {
+        grid-template-columns: 1fr;
+      }
+      .topbar {
+        padding: 12px 18px;
+      }
+      .hero-inner, .hero-rail-wrap, .catalog-shell {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAVIGATION -->
+  <header class="topbar">
+    <a class="brand" href="#hero-top">
+      <div class="brand-mark">EF</div>
+      <div class="brand-text">
+        <strong>EasyFarm Footage Studio</strong>
+        <span>B2B HERO LOOP &amp; 4K ASSET NAVIGATOR</span>
+      </div>
+    </a>
+    <nav class="topbar-nav">
+      <a class="nav-pill" href="#hero-top">Hero Simulator</a>
+      <a class="nav-pill" href="#footage-library">Browse 15 Clips</a>
+      <a class="nav-pill" href="#hero-export">Export Hero Code</a>
+      <button class="nav-pill accent" id="toggle-overlay-top" type="button">Toggle Hero UI</button>
+    </nav>
+  </header>
+
+  <!-- HERO LOOP SIMULATOR -->
+  <section class="hero" id="hero-top" aria-label="EasyFarm Hero Loop Preview">
+    <div class="hero-stage">
+      <video id="hero-vid-a" class="hero-video active" muted playsinline preload="auto"></video>
+      <video id="hero-vid-b" class="hero-video" muted playsinline preload="auto"></video>
+      <div class="hero-scrim"></div>
+    </div>
+
+    <div class="hero-inner">
+      <div class="hero-copy" id="hero-copy">
+        <div class="trust-chip">
+          <span class="trust-dot"></span>
+          <span>VERIFIED FARM-TO-WHOLESALE TRACEABILITY · BLOCKCHAIN + QR</span>
+        </div>
+        <h1 class="hero-title">Direct harvest trade, <em>verified</em> from field to crate.</h1>
+        <p class="hero-subtitle">
+          EasyFarm connects growers directly with traders, wholesalers, and retailers. Compare live mandi &amp; regional pricing, seal transparent offers on-chain, and trace every batch via QR code.
+        </p>
+        <div class="hero-cta-row">
+          <a class="btn-primary" href="#footage-library">Explore Verified 4K Clips</a>
+          <button class="btn-ghost" id="hero-next-btn" type="button">Next Loop Clip &rarr;</button>
+        </div>
+        <div class="hero-metrics">
+          <div><strong>100% QR</strong>Batch-level farm origin</div>
+          <div><strong>On-Chain</strong>Immutable offer &amp; payout ledger</div>
+          <div><strong>0 Brokers</strong>Direct farmer-to-buyer margin</div>
+        </div>
+      </div>
+
+      <!-- DIRECTOR & TRANSITION CONTROLS -->
+      <aside class="director-panel" aria-label="Hero Loop Controls">
+        <div class="director-head">
+          <span>Hero Loop Director</span>
+          <span id="loop-counter">1 / 6</span>
+        </div>
+        <div class="now-playing-title" id="now-playing-title">Loading clip...</div>
+        <div class="now-playing-meta" id="now-playing-meta">4K UHD · Crossfade Loop</div>
+
+        <div class="control-grid">
+          <label class="slider-row">
+            <span>Backdrop Blur</span>
+            <input id="blur-slider" type="range" min="0" max="14" step="0.5" value="0" />
+            <output id="blur-out">0px</output>
+          </label>
+          <label class="slider-row">
+            <span>Dark Scrim</span>
+            <input id="scrim-slider" type="range" min="0.15" max="0.85" step="0.05" value="0.55" />
+            <output id="scrim-out">55%</output>
+          </label>
+          <label class="slider-row">
+            <span>Clip Window</span>
+            <input id="duration-slider" type="range" min="3" max="10" step="1" value="5" />
+            <output id="duration-out">5s</output>
+          </label>
+          <div class="btn-row">
+            <button class="ctrl-btn" id="btn-prev" type="button">&larr; Prev</button>
+            <button class="ctrl-btn active" id="btn-playpause" type="button">Pause</button>
+            <button class="ctrl-btn" id="btn-next" type="button">Next &rarr;</button>
+            <button class="ctrl-btn" id="btn-inspect-current" type="button">Inspect</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- HERO TIMELINE RAIL -->
+    <div class="hero-rail-wrap">
+      <div class="hero-rail" id="hero-rail"></div>
+    </div>
+  </section>
+
+  <!-- CLIP NAVIGATOR & GALLERY -->
+  <main class="catalog-shell" id="footage-library">
+    <div class="section-header">
+      <div>
+        <div class="eyebrow">Curated Local Prototype Library</div>
+        <h2 class="section-title">Navigate &amp; Assemble Your Hero Sequence</h2>
+        <p class="section-desc">
+          Every clip below is locally stored, verified with <code>ffprobe</code>, and ready for instant offline prototype playback. Hover any card to preview motion, click to inspect full-screen, or toggle clips in and out of the live Hero Loop above.
+        </p>
+      </div>
+      <div class="ref-card">
+        <img src="assets/reference-hero-frame.jpg" alt="Target golden-hour farmer and buyer crate handoff aesthetic" />
+        <div>
+          <strong>Target Brand Aesthetic</strong>
+          <span>Golden-hour warmth, direct farmer-buyer handoff, wooden produce crates, trustworthy realism.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="tabs" id="stage-tabs" role="tablist" aria-label="Filter by Supply Chain Stage">
+        <button class="tab-btn active" data-stage="all" type="button">All Clips (14)</button>
+        <button class="tab-btn" data-stage="origin" type="button">Farm Origin</button>
+        <button class="tab-btn" data-stage="harvest" type="button">Harvest &amp; Quality</button>
+        <button class="tab-btn" data-stage="trade" type="button">Direct B2B Trade</button>
+        <button class="tab-btn" data-stage="traceability" type="button">QR &amp; Logistics</button>
+      </div>
+      <div class="toolbar-right">
+        <input class="search-input" id="search-box" type="search" placeholder="Search tomatoes, crate, QR..." aria-label="Search clips" />
+        <select class="res-select" id="res-filter" aria-label="Filter by resolution">
+          <option value="all">All Resolutions</option>
+          <option value="4k">4K UHD / DCI Only</option>
+          <option value="qhd">1440p QHD+</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid" id="clip-grid"></div>
+
+    <!-- EXPORT SNIPPET -->
+    <section class="export-section" id="hero-export">
+      <div class="export-head">
+        <div>
+          <h3>Active Hero Playlist Manifest</h3>
+          <p>Updates live as you add or remove clips from the Hero Loop. Drop these relative paths straight into your EasyFarm landing page.</p>
+        </div>
+        <button class="action-btn primary" id="copy-manifest-btn" type="button" style="flex:0 0 auto;padding:10px 18px;">Copy Playlist JSON</button>
+      </div>
+      <pre class="snippet" id="manifest-snippet"></pre>
+    </section>
+  </main>
+
+  <!-- CINEMA LIGHTBOX INSPECTOR -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-labelledby="lb-title">
+    <div class="lightbox-panel">
+      <div class="lightbox-video-wrap">
+        <video id="lb-video" controls loop autoplay muted playsinline></video>
+      </div>
+      <div class="lightbox-footer">
+        <div class="lightbox-info">
+          <h3 id="lb-title">Clip Title</h3>
+          <p id="lb-meta"></p>
+        </div>
+        <div class="lightbox-controls">
+          <button class="ctrl-btn" id="lb-prev" type="button">&larr; Prev</button>
+          <button class="ctrl-btn" id="lb-next" type="button">Next &rarr;</button>
+          <button class="ctrl-btn" id="lb-speed" type="button">1.0x</button>
+          <button class="ctrl-btn" id="lb-toggle-hero" type="button">+ Hero Loop</button>
+          <button class="ctrl-btn" id="lb-close" type="button">Close (Esc)</button>
+          <span class="kbd-hint">&larr;/&rarr; navigate · Space play · Esc close</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CLIPS = [
+      {
+        id: "rural-sunrise-farmland",
+        title: "Aerial Crop Fields at Sunrise",
+        stage: "origin",
+        stageLabel: "Farm Origin",
+        resLabel: "4K DCI",
+        resGroup: "4k",
+        width: 4096,
+        height: 2160,
+        fps: 29.97,
+        duration: 16.15,
+        sizeMB: 50.89,
+        src: "assets/01-aerial-crop-fields-sunrise-4k.mp4",
+        poster: "assets/posters/01-aerial-crop-fields-sunrise-4k.jpg",
+        inHero: true,
+        heroNote: "Ideal opening hero shot — establishes scale and authentic agricultural origin.",
+        tags: ["aerial", "drone", "sunrise", "farmland", "crops", "origin"]
+      },
+      {
+        id: "farmer-golden-field",
+        title: "Grower Standing in Pasture Field",
+        stage: "origin",
+        stageLabel: "Farm Origin",
+        resLabel: "4K DCI",
+        resGroup: "4k",
+        width: 4096,
+        height: 2160,
+        fps: 25,
+        duration: 21.96,
+        sizeMB: 39.50,
+        src: "assets/02-farmer-golden-field-4k.mp4",
+        poster: "assets/posters/02-farmer-golden-field-4k.jpg",
+        inHero: true,
+        heroNote: "Direct eye-level farmer portrait that builds immediate human trust.",
+        tags: ["farmer", "overalls", "portrait", "field", "trust"]
+      },
+      {
+        id: "tomato-harvest",
+        title: "Greenhouse Tomato Harvesting",
+        stage: "harvest",
+        stageLabel: "Harvest & Quality",
+        resLabel: "4K UHD",
+        resGroup: "4k",
+        width: 3840,
+        height: 2160,
+        fps: 25,
+        duration: 9.20,
+        sizeMB: 24.90,
+        src: "assets/03-tomato-harvest-4k.mp4",
+        poster: "assets/posters/03-tomato-harvest-4k.jpg",
+        inHero: true,
+        heroNote: "Hands-on harvest sequence showing care and vine-fresh quality.",
+        tags: ["tomatoes", "harvest", "greenhouse", "produce", "quality"]
+      },
+      {
+        id: "vegetable-basket-harvest",
+        title: "Fresh Harvest Basket Presentation",
+        stage: "trade",
+        stageLabel: "Direct B2B Trade",
+        resLabel: "4K UHD",
+        resGroup: "4k",
+        width: 3840,
+        height: 2160,
+        fps: 25,
+        duration: 8.12,
+        sizeMB: 22.77,
+        src: "assets/04-vegetable-basket-harvest-4k.mp4",
+        poster: "assets/posters/04-vegetable-basket-harvest-4k.jpg",
+        inHero: true,
+        heroNote: "Echoes your golden-hour handoff concept with crisp 4K produce detail.",
+        tags: ["basket", "vegetables", "farmer", "handoff", "crate", "tomatoes"]
+      },
+      {
+        id: "warehouse-qr-scanning",
+        title: "Warehouse Batch & QR Scanning",
+        stage: "traceability",
+        stageLabel: "QR & Logistics",
+        resLabel: "4K UHD",
+        resGroup: "4k",
+        width: 3840,
+        height: 2160,
+        fps: 25,
+        duration: 10.68,
+        sizeMB: 18.86,
+        src: "assets/05-warehouse-qr-scanning-4k.mp4",
+        poster: "assets/posters/05-warehouse-qr-scanning-4k.jpg",
+        inHero: true,
+        heroNote: "Visually grounds EasyFarm's QR traceability and warehouse verification.",
+        tags: ["qr", "scanner", "warehouse", "traceability", "inventory", "blockchain"]
+      },
+      {
+        id: "tablet-inventory-verification",
+        title: "Digital Tablet Quality & Stock Audit",
+        stage: "traceability",
+        stageLabel: "QR & Logistics",
+        resLabel: "4K UHD",
+        resGroup: "4k",
+        width: 3840,
+        height: 2160,
+        fps: 25,
+        duration: 18.56,
+        sizeMB: 31.69,
+        src: "assets/06-tablet-inventory-verification-4k.mp4",
+        poster: "assets/posters/06-tablet-inventory-verification-4k.jpg",
+        inHero: true,
+        heroNote: "Shows digital verification & B2B ledger tracking in action.",
+        tags: ["tablet", "verification", "audit", "warehouse", "digital", "orders"]
+      },
+      {
+        id: "tomato-macro-detail",
+        title: "Fresh Washed Tomato Macro Detail",
+        stage: "harvest",
+        stageLabel: "Harvest & Quality",
+        resLabel: "4K UHD",
+        resGroup: "4k",
+        width: 3840,
+        height: 2160,
+        fps: 29.97,
+        duration: 4.40,
+        sizeMB: 12.79,
+        src: "assets/07-tomato-macro-detail-4k.mp4",
+        poster: "assets/posters/07-tomato-macro-detail-4k.jpg",
+        inHero: false,
+        heroNote: "Ultra-sharp macro B-roll for quality-assurance transitions.",
+        tags: ["tomato", "macro", "quality", "fresh", "water"]
+      },
+      {
+        id: "couple-harvesting",
+        title: "Growers Harvesting Organic Greens",
+        stage: "origin",
+        stageLabel: "Farm Origin",
+        resLabel: "4K UHD",
+        resGroup: "4k",
+        width: 3840,
+        height: 2160,
+        fps: 25,
+        duration: 3.40,
+        sizeMB: 8.65,
+        src: "assets/08-couple-harvesting-4k.mp4",
+        poster: "assets/posters/08-couple-harvesting-4k.jpg",
+        inHero: false,
+        heroNote: "Short field cut showing collaborative family farm operations.",
+        tags: ["lettuce", "greens", "harvest", "farmers", "soil"]
+      },
+      {
+        id: "senior-grower-produce",
+        title: "Grower Inspecting Berry Harvest",
+        stage: "harvest",
+        stageLabel: "Harvest & Quality",
+        resLabel: "4K UHD",
+        resGroup: "4k",
+        width: 3840,
+        height: 2160,
+        fps: 30,
+        duration: 9.47,
+        sizeMB: 25.74,
+        src: "assets/09-senior-grower-produce-4k.mp4",
+        poster: "assets/posters/09-senior-grower-produce-4k.jpg",
+        inHero: false,
+        heroNote: "Experienced grower checking quality under farm market awning.",
+        tags: ["strawberries", "grower", "inspection", "market", "quality"]
+      },
+      {
+        id: "crate-delivery-handoff",
+        title: "Produce Crate Delivery Handoff",
+        stage: "trade",
+        stageLabel: "Direct B2B Trade",
+        resLabel: "4K UHD",
+        resGroup: "4k",
+        width: 3840,
+        height: 2160,
+        fps: 30,
+        duration: 7.27,
+        sizeMB: 18.87,
+        src: "assets/10-crate-delivery-handoff-4k.mp4",
+        poster: "assets/posters/10-crate-delivery-handoff-4k.jpg",
+        inHero: false,
+        heroNote: "Last-mile delivery of assorted fresh produce crates.",
+        tags: ["crate", "delivery", "vegetables", "fulfillment"]
+      },
+      {
+        id: "farmer-buyer-handshake",
+        title: "B2B Trade Agreement Handshake",
+        stage: "trade",
+        stageLabel: "Direct B2B Trade",
+        resLabel: "4K DCI",
+        resGroup: "4k",
+        width: 4096,
+        height: 2160,
+        fps: 25,
+        duration: 14.24,
+        sizeMB: 22.13,
+        src: "assets/11-farmer-buyer-handshake-4k.mp4",
+        poster: "assets/posters/11-farmer-buyer-handshake-4k.jpg",
+        inHero: false,
+        heroNote: "Clean 4K handshake clip representing fair B2B contract settlement.",
+        tags: ["handshake", "contract", "deal", "b2b", "trust"]
+      },
+      {
+        id: "logistics-distribution-hub",
+        title: "Aerial Freight & Distribution Park",
+        stage: "traceability",
+        stageLabel: "QR & Logistics",
+        resLabel: "4K UHD",
+        resGroup: "4k",
+        width: 3840,
+        height: 2160,
+        fps: 25,
+        duration: 8.56,
+        sizeMB: 16.62,
+        src: "assets/12-logistics-distribution-hub-4k.mp4",
+        poster: "assets/posters/12-logistics-distribution-hub-4k.jpg",
+        inHero: false,
+        heroNote: "High-altitude freight & warehouse scale bordering farmland.",
+        tags: ["logistics", "trucks", "warehouse", "wholesale", "aerial"]
+      },
+      {
+        id: "produce-basket-handoff",
+        title: "Farm-to-Buyer Basket Exchange",
+        stage: "trade",
+        stageLabel: "Direct B2B Trade",
+        resLabel: "1440p QHD",
+        resGroup: "qhd",
+        width: 2560,
+        height: 1440,
+        fps: 25,
+        duration: 4.60,
+        sizeMB: 8.06,
+        src: "assets/13-produce-basket-handoff-1440p.mp4",
+        poster: "assets/posters/13-produce-basket-handoff-1440p.jpg",
+        inHero: false,
+        heroNote: "Direct hand-to-hand basket exchange right in the field.",
+        tags: ["handoff", "basket", "buyer", "farmer", "exchange"]
+      },
+      {
+        id: "growers-sharing-lettuce",
+        title: "Growers Inspecting Fresh Harvest",
+        stage: "trade",
+        stageLabel: "Direct B2B Trade",
+        resLabel: "1440p QHD",
+        resGroup: "qhd",
+        width: 2560,
+        height: 1440,
+        fps: 25,
+        duration: 5.88,
+        sizeMB: 7.88,
+        src: "assets/14-growers-sharing-lettuce-1440p.mp4",
+        poster: "assets/posters/14-growers-sharing-lettuce-1440p.jpg",
+        inHero: false,
+        heroNote: "Warm on-farm collaboration and quality inspection.",
+        tags: ["growers", "lettuce", "harvest", "inspection"]
+      },
+      {
+        id: "tomatoes-on-conveyor",
+        title: "Commercial Tomato Sorting Line",
+        stage: "harvest",
+        stageLabel: "Harvest & Quality",
+        resLabel: "1080p HD",
+        resGroup: "hd",
+        width: 1920,
+        height: 1080,
+        fps: 29.97,
+        duration: 4.44,
+        sizeMB: 2.84,
+        src: "assets/15-tomatoes-on-conveyor-1080p.mp4",
+        poster: "assets/posters/15-tomatoes-on-conveyor-1080p.jpg",
+        inHero: false,
+        heroNote: "Commercial grading conveyor — great for B2B wholesale credibility.",
+        tags: ["conveyor", "sorting", "grading", "tomatoes", "wholesale"]
+      }
+    ];
+
+    // State
+    let activeStage = "all";
+    let activeRes = "all";
+    let searchQuery = "";
+    let heroIdx = 0;
+    let isPlaying = true;
+    let clipWindowSec = 5;
+    let activeBuffer = "a";
+    let elapsedInClip = 0;
+    let lastTick = performance.now();
+    let lbIndex = -1;
+    const speeds = [0.5, 1.0, 1.25];
+    let speedIdx = 1;
+
+    // Elements
+    const vidA = document.getElementById("hero-vid-a");
+    const vidB = document.getElementById("hero-vid-b");
+    const heroRail = document.getElementById("hero-rail");
+    const loopCounter = document.getElementById("loop-counter");
+    const nowTitle = document.getElementById("now-playing-title");
+    const nowMeta = document.getElementById("now-playing-meta");
+    const clipGrid = document.getElementById("clip-grid");
+    const manifestEl = document.getElementById("manifest-snippet");
+    const heroCopy = document.getElementById("hero-copy");
+
+    function getHeroClips() {
+      const selected = CLIPS.filter(c => c.inHero);
+      return selected.length ? selected : [CLIPS[0]];
+    }
+
+    function renderHeroRail() {
+      const playlist = getHeroClips();
+      if (heroIdx >= playlist.length) heroIdx = 0;
+      heroRail.innerHTML = "";
+      playlist.forEach((clip, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "rail-item" + (idx === heroIdx ? " active" : "");
+        btn.innerHTML = `
+          <span class="rail-num">0${idx + 1} · ${clip.resLabel}</span>
+          <span class="rail-name">${clip.title}</span>
+          <span class="rail-progress"></span>
+        `;
+        btn.addEventListener("click", () => switchHeroClip(idx));
+        heroRail.appendChild(btn);
+      });
+      renderManifest();
+    }
+
+    function switchHeroClip(nextIndex) {
+      const playlist = getHeroClips();
+      heroIdx = (nextIndex + playlist.length) % playlist.length;
+      const clip = playlist[heroIdx];
+      elapsedInClip = 0;
+
+      const incoming = activeBuffer === "a" ? vidB : vidA;
+      const outgoing = activeBuffer === "a" ? vidA : vidB;
+
+      incoming.src = clip.src;
+      incoming.poster = clip.poster;
+      incoming.currentTime = 0;
+      incoming.load();
+
+      const startPlay = () => {
+        if (isPlaying) incoming.play().catch(() => {});
+        incoming.classList.remove("fading-out");
+        incoming.classList.add("active");
+        outgoing.classList.remove("active");
+        outgoing.classList.add("fading-out");
+        activeBuffer = activeBuffer === "a" ? "b" : "a";
+      };
+
+      if (incoming.readyState >= 2) {
+        startPlay();
+      } else {
+        incoming.addEventListener("loadeddata", startPlay, { once: true });
+      }
+
+      loopCounter.textContent = `${heroIdx + 1} / ${playlist.length}`;
+      nowTitle.textContent = clip.title;
+      nowMeta.textContent = `${clip.width}×${clip.height} · ${clip.fps}fps · ${clip.duration.toFixed(1)}s`;
+
+      [...heroRail.children].forEach((el, i) => {
+        el.classList.toggle("active", i === heroIdx);
+        const bar = el.querySelector(".rail-progress");
+        if (bar) bar.style.width = i < heroIdx ? "100%" : "0%";
+      });
+    }
+
+    function tickHero(now) {
+      const dt = (now - lastTick) / 1000;
+      lastTick = now;
+      const playlist = getHeroClips();
+      if (isPlaying && playlist.length > 0) {
+        elapsedInClip += dt;
+        const clip = playlist[heroIdx];
+        const targetDur = Math.min(clipWindowSec, Math.max(2.5, clip.duration - 0.3));
+        const pct = Math.min(100, (elapsedInClip / targetDur) * 100);
+        const activeEl = heroRail.children[heroIdx];
+        if (activeEl) {
+          const bar = activeEl.querySelector(".rail-progress");
+          if (bar) bar.style.width = `${pct}%`;
+        }
+        if (elapsedInClip >= targetDur) {
+          switchHeroClip(heroIdx + 1);
+        }
+      }
+      requestAnimationFrame(tickHero);
+    }
+
+    // Director controls
+    document.getElementById("blur-slider").addEventListener("input", e => {
+      const val = e.target.value + "px";
+      document.documentElement.style.setProperty("--hero-blur", val);
+      document.getElementById("blur-out").textContent = val;
+    });
+
+    document.getElementById("scrim-slider").addEventListener("input", e => {
+      const val = parseFloat(e.target.value);
+      document.documentElement.style.setProperty("--hero-scrim", val);
+      document.getElementById("scrim-out").textContent = Math.round(val * 100) + "%";
+    });
+
+    document.getElementById("duration-slider").addEventListener("input", e => {
+      clipWindowSec = parseInt(e.target.value, 10);
+      document.getElementById("duration-out").textContent = clipWindowSec + "s";
+    });
+
+    const playPauseBtn = document.getElementById("btn-playpause");
+    playPauseBtn.addEventListener("click", () => {
+      isPlaying = !isPlaying;
+      const currentVid = activeBuffer === "a" ? vidA : vidB;
+      if (isPlaying) {
+        currentVid.play().catch(() => {});
+        playPauseBtn.textContent = "Pause";
+        playPauseBtn.classList.add("active");
+      } else {
+        currentVid.pause();
+        playPauseBtn.textContent = "Play";
+        playPauseBtn.classList.remove("active");
+      }
+    });
+
+    document.getElementById("btn-prev").addEventListener("click", () => switchHeroClip(heroIdx - 1));
+    document.getElementById("btn-next").addEventListener("click", () => switchHeroClip(heroIdx + 1));
+    document.getElementById("hero-next-btn").addEventListener("click", () => switchHeroClip(heroIdx + 1));
+    document.getElementById("btn-inspect-current").addEventListener("click", () => {
+      const clip = getHeroClips()[heroIdx];
+      const idx = CLIPS.findIndex(c => c.id === clip.id);
+      if (idx !== -1) openLightbox(idx);
+    });
+
+    document.getElementById("toggle-overlay-top").addEventListener("click", () => {
+      heroCopy.classList.toggle("hidden-overlay");
+    });
+
+    // Filtering & Grid
+    function getFilteredClips() {
+      return CLIPS.filter(c => {
+        if (activeStage !== "all" && c.stage !== activeStage) return false;
+        if (activeRes === "4k" && c.resGroup !== "4k") return false;
+        if (activeRes === "qhd" && c.resGroup === "hd") return false;
+        if (searchQuery) {
+          const hay = (c.title + " " + c.heroNote + " " + c.stageLabel + " " + c.tags.join(" ")).toLowerCase();
+          if (!hay.includes(searchQuery)) return false;
+        }
+        return true;
+      });
+    }
+
+    function renderGrid() {
+      const list = getFilteredClips();
+      clipGrid.innerHTML = "";
+      if (!list.length) {
+        clipGrid.innerHTML = `<div style="grid-column:1/-1;padding:48px;text-align:center;color:var(--ink-muted);background:var(--bg-surface);border:1px solid var(--border-hairline);border-radius:16px;">No clips match the current filters. Reset the search or resolution filter.</div>`;
+        return;
+      }
+
+      list.forEach(clip => {
+        const globalIdx = CLIPS.findIndex(c => c.id === clip.id);
+        const card = document.createElement("article");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="card-media" title="Hover to preview · Click to inspect">
+            <img src="${clip.poster}" alt="${clip.title}" />
+            <video muted loop playsinline preload="none" data-src="${clip.src}"></video>
+            <div class="badge-row">
+              <span class="res-badge ${clip.resGroup === '4k' ? 'uhd' : ''}">${clip.resLabel} · ${clip.width}×${clip.height}</span>
+              <span class="stage-badge">${clip.stageLabel}</span>
+            </div>
+            <span class="hover-hint">Hover to preview</span>
+          </div>
+          <div class="card-body">
+            <div class="card-title-row">
+              <h3 class="card-title">${clip.title}</h3>
+            </div>
+            <p class="card-desc">${clip.heroNote}</p>
+            <div class="card-specs">
+              <span>${clip.duration.toFixed(2)}s</span>
+              <span>${clip.fps} fps</span>
+              <span>${clip.sizeMB.toFixed(1)} MB</span>
+            </div>
+            <div class="card-actions">
+              <button class="action-btn ${clip.inHero ? 'in-loop' : ''}" data-action="loop" type="button">
+                ${clip.inHero ? '✓ In Hero Loop' : '+ Add to Hero'}
+              </button>
+              <button class="action-btn primary" data-action="inspect" type="button">Inspect Clip</button>
+            </div>
+          </div>
+        `;
+
+        const media = card.querySelector(".card-media");
+        const previewVid = media.querySelector("video");
+        media.addEventListener("mouseenter", () => {
+          if (!previewVid.src) previewVid.src = previewVid.dataset.src;
+          media.classList.add("previewing");
+          previewVid.play().catch(() => {});
+        });
+        media.addEventListener("mouseleave", () => {
+          media.classList.remove("previewing");
+          previewVid.pause();
+        });
+        media.addEventListener("click", () => openLightbox(globalIdx));
+
+        card.querySelector('[data-action="inspect"]').addEventListener("click", () => openLightbox(globalIdx));
+        card.querySelector('[data-action="loop"]').addEventListener("click", () => toggleInHero(clip.id));
+
+        clipGrid.appendChild(card);
+      });
+    }
+
+    function toggleInHero(id) {
+      const clip = CLIPS.find(c => c.id === id);
+      if (!clip) return;
+      const currentCount = CLIPS.filter(c => c.inHero).length;
+      if (clip.inHero && currentCount <= 1) return; // keep at least 1 clip in hero
+      clip.inHero = !clip.inHero;
+      renderHeroRail();
+      renderGrid();
+      if (lbIndex !== -1 && CLIPS[lbIndex].id === id) updateLightboxMeta();
+    }
+
+    function renderManifest() {
+      const playlist = getHeroClips().map(c => ({
+        title: c.title,
+        stage: c.stageLabel,
+        resolution: `${c.width}x${c.height}`,
+        durationSec: c.duration,
+        src: c.src,
+        poster: c.poster
+      }));
+      manifestEl.textContent = JSON.stringify(playlist, null, 2);
+    }
+
+    // Tabs & Filters
+    document.querySelectorAll("#stage-tabs .tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("#stage-tabs .tab-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        activeStage = btn.dataset.stage;
+        renderGrid();
+      });
+    });
+
+    document.getElementById("search-box").addEventListener("input", e => {
+      searchQuery = e.target.value.trim().toLowerCase();
+      renderGrid();
+    });
+
+    document.getElementById("res-filter").addEventListener("change", e => {
+      activeRes = e.target.value;
+      renderGrid();
+    });
+
+    document.getElementById("copy-manifest-btn").addEventListener("click", async e => {
+      try {
+        await navigator.clipboard.writeText(manifestEl.textContent);
+        e.target.textContent = "Copied!";
+        setTimeout(() => { e.target.textContent = "Copy Playlist JSON"; }, 1600);
+      } catch {
+        e.target.textContent = "Select & Copy Above";
+      }
+    });
+
+    // Lightbox
+    const lb = document.getElementById("lightbox");
+    const lbVid = document.getElementById("lb-video");
+    const lbTitle = document.getElementById("lb-title");
+    const lbMeta = document.getElementById("lb-meta");
+    const lbToggleHero = document.getElementById("lb-toggle-hero");
+    const lbSpeed = document.getElementById("lb-speed");
+
+    function updateLightboxMeta() {
+      const c = CLIPS[lbIndex];
+      lbTitle.textContent = c.title;
+      lbMeta.textContent = `${c.stageLabel} · ${c.width}×${c.height} · ${c.fps}fps · ${c.duration.toFixed(2)}s · ${c.src}`;
+      lbToggleHero.textContent = c.inHero ? "✓ In Hero Loop" : "+ Add to Hero";
+      lbToggleHero.classList.toggle("active", c.inHero);
+    }
+
+    function openLightbox(idx) {
+      lbIndex = (idx + CLIPS.length) % CLIPS.length;
+      const c = CLIPS[lbIndex];
+      lbVid.src = c.src;
+      lbVid.poster = c.poster;
+      lbVid.playbackRate = speeds[speedIdx];
+      lb.classList.add("open");
+      updateLightboxMeta();
+      lbVid.play().catch(() => {});
+    }
+
+    function closeLightbox() {
+      lb.classList.remove("open");
+      lbVid.pause();
+      lbVid.removeAttribute("src");
+      lbIndex = -1;
+    }
+
+    document.getElementById("lb-close").addEventListener("click", closeLightbox);
+    document.getElementById("lb-prev").addEventListener("click", () => openLightbox(lbIndex - 1));
+    document.getElementById("lb-next").addEventListener("click", () => openLightbox(lbIndex + 1));
+    document.getElementById("lb-toggle-hero").addEventListener("click", () => {
+      if (lbIndex !== -1) toggleInHero(CLIPS[lbIndex].id);
+    });
+    lbSpeed.addEventListener("click", () => {
+      speedIdx = (speedIdx + 1) % speeds.length;
+      lbVid.playbackRate = speeds[speedIdx];
+      lbSpeed.textContent = speeds[speedIdx].toFixed(2).replace(/\.00$/, ".0") + "x";
+    });
+
+    lb.addEventListener("click", e => {
+      if (e.target === lb) closeLightbox();
+    });
+
+    document.addEventListener("keydown", e => {
+      if (!lb.classList.contains("open")) return;
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowRight") openLightbox(lbIndex + 1);
+      if (e.key === "ArrowLeft") openLightbox(lbIndex - 1);
+      if (e.key === " ") {
+        e.preventDefault();
+        if (lbVid.paused) lbVid.play(); else lbVid.pause();
+      }
+    });
+
+    // Update tab count accurately
+    document.querySelector('[data-stage="all"]').textContent = `All Clips (${CLIPS.length})`;
+
+    // Init
+    renderHeroRail();
+    renderGrid();
+    switchHeroClip(0);
+    requestAnimationFrame(tickHero);
+  </script>
+</body>
+</html>

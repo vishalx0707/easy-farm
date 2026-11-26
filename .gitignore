@@ -1,0 +1,22 @@
+node_modules/
+.easyfarm*/
+.wrangler/
+dist/
+.env*
+.dev.vars*
+*.log
+design/qa-*.png
+design/verification-results.json
+# Downloaded source footage stays local; the app's optimized HeroLoop films,
+# poster images and generated workspace asset are versioned.
+assets/*.mp4
+hero-footage/clean-4k/
+hero-footage/commercial-previews/
+hero-footage/industrial/
+hero-footage/verified-4k/
+hero-footage/fresh-produce/*.mp4
+hero-footage/fresh-produce/*.webm
+design/desktop-overview.png
+hero-footage/*
+!hero-footage/fresh-produce/
+!hero-footage/reference-hero-frame.jpg
