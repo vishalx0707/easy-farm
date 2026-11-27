@@ -42,13 +42,16 @@ EasyFarm is configured for **Vercel** frontend/API hosting backed by the persist
 
 ### Architecture
 
-- **Vercel static output (`dist/`)**: `vercel.json` sets `"framework": null`, `"buildCommand": "npm run build"`, `"outputDirectory": "dist"`, `"trailingSlash": false`, and pins Node `24.x` via `package.json` `engines.node`. `tools/build.cjs` emits only compiled React bundles (`app.html`, `login.html`, `onboarding.html`), marketing/film assets (`index.html`, `landing.css`, `landing.js`, `film-script.html`), `assets/`, and `hero-footage/fresh-produce/*.jpg`. Source files, `.dev.vars`, `.easyfarm*`, and fixture code are excluded by `tools/build.cjs` and `.vercelignore`.
+- **Vercel static output (`dist/`)**: `vercel.json` sets `"framework": null`, `"buildCommand": "npm run typecheck && npm run build"`, `"outputDirectory": "dist"`, `"trailingSlash": false`, and pins Node `24.x` via `package.json` `engines.node`. `tools/build.cjs` emits only compiled React bundles (`app.html`, `login.html`, `onboarding.html`), marketing/film assets (`index.html`, `landing.css`, `landing.js`, `film-script.html`), `assets/`, and `hero-footage/fresh-produce/*.jpg`. Source files, `.dev.vars`, `.easyfarm*`, and fixture code are excluded by `tools/build.cjs` and `.vercelignore`.
 - **Routes & deep links**: `vercel.json` rewrites `/film-script`, `/login`, `/onboarding`, `/buyer`, `/grower`, and `/api/:path*` (`-> /api/marketplace?__route=/:path*`). `/app.html?batch=...` is served directly for public QR traces. Security headers (`X-Content-Type-Options`, `Referrer-Policy`, `Content-Security-Policy`) and `Cache-Control: no-cache` for HTML routes / `Cache-Control: no-store` + `Vary: Origin, Authorization` for `/api/*` are configured without wildcard CORS.
 - **Authenticated API proxy (`api/marketplace.mjs`, `api/_proxy.mjs`, `origin.mjs`)**: Runs on Vercel's Node 24 runtime, validates the request's canonical origin against `EASYFARM_TRUSTED_ORIGINS` (or Vercel-assigned system domains, never trusting `X-Forwarded-Host`), enforces same-origin `application/json` checks on `POST` writes, enforces the 16 KB body limit, fails closed (`503`) if unconfigured, and forwards requests to `EASYFARM_BACKEND_URL` with `X-EasyFarm-Proxy-Secret` and `X-EasyFarm-Origin`.
 - **Cloudflare Worker backend (`worker.mjs`, `auth.mjs`, `marketplace-service.mjs`, `wrangler.jsonc`)**: Uses Workers Static Assets plus a SQLite-backed Durable Object (`Marketplace`). When `EASYFARM_PROXY_SECRET` is set, direct requests to `workers.dev` without the matching secret or from an untrusted `X-EasyFarm-Origin` fail closed with `403`. `auth.mjs` binds Clerk JWT `authorizedParties` (`azp`) to the verified frontend origin, `marketplace-service.mjs` checks write `Origin` against that verified origin, and `/api/qr/:orderId` encodes the verified frontend origin.
 
 ### Commands
 
+See [VERCEL.md](VERCEL.md) for the GitHub import settings and [.env.vercel.example](.env.vercel.example) for the three Vercel runtime variables.
+
+- `npm run check:vercel` — runs TypeScript plus the full isolated Vercel/Cloudflare readiness check without deploying.
 - `npm run build` — compiles React into `dist/` and copies public marketing/media assets.
 - `npm run dev:cloudflare` — runs the local Worker at [127.0.0.1:8787](http://127.0.0.1:8787/login) with persistent local storage in `.wrangler/local`.
 - `npm run check:cloudflare` — validates Cloudflare Worker packaging (`wrangler deploy --dry-run`) without deploying.

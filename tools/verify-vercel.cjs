@@ -24,6 +24,7 @@ const MIME_TYPES = {
   ".png": "image/png",
   ".webp": "image/webp",
   ".woff2": "font/woff2",
+  ".woff": "font/woff",
   ".svg": "image/svg+xml",
 };
 
@@ -56,6 +57,9 @@ function verifyProductionDistAndConfig() {
     "assets/film-script.css",
     "assets/hero/easyfarm-film-compact.mp4",
     "assets/Geist.woff2",
+    "assets/Montreal-400.woff",
+    "assets/Montreal-500.woff",
+    "assets/tomatoes-still-life.webp",
   ]) {
     assert(
       fs.existsSync(path.join(distRoot, required)),
@@ -99,7 +103,8 @@ function verifyProductionDistAndConfig() {
 
   const vercelConfig = JSON.parse(fs.readFileSync("vercel.json", "utf8"));
   assert.equal(vercelConfig.framework, null);
-  assert.equal(vercelConfig.buildCommand, "npm run build");
+  assert.equal(vercelConfig.installCommand, "npm ci");
+  assert.equal(vercelConfig.buildCommand, "npm run typecheck && npm run build");
   assert.equal(vercelConfig.outputDirectory, "dist");
   assert.equal(vercelConfig.trailingSlash, false);
   assert(vercelConfig.functions?.["api/marketplace.mjs"]?.maxDuration >= 10);
@@ -950,6 +955,8 @@ async function main() {
       await page.locator("#profile-submit").click();
       await page.waitForURL("**/grower**");
       await page.locator(".app-shell").waitFor();
+      await page.evaluate(() => document.fonts.ready);
+      assert(await page.evaluate(() => document.fonts.check("14px Montreal")), "Montreal fonts must load through Vercel static asset serving");
 
       assert(
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
