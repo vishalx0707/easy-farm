@@ -65,6 +65,24 @@
 .auth-layout .auth-card {
   background: #fff;
 }
+.auth-layout .auth-card .google-button {
+  background: #243b29;
+  border-color: #243b29;
+  color: #fff;
+  box-shadow:
+    inset 0 1px #ffffff14,
+    0 3px 10px #1c342414;
+}
+.auth-layout .auth-card .google-button:hover:not(:disabled) {
+  background: #314e36;
+  border-color: #314e36;
+  color: #fff;
+}
+.auth-layout .auth-card .google-button:disabled {
+  background: #243b29;
+  color: #fff;
+  opacity: 0.55;
+}
 .auth-story:has(.auth-reel) .auth-story-copy h1,
 .auth-story:has(.auth-reel) .auth-story-copy .eyebrow,
 .auth-story:has(.auth-reel) > .brand {
