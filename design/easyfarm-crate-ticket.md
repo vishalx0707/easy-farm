@@ -63,3 +63,5 @@ Titles sit over the produce or grower footage with a soft ivory veil, or on warm
 | 0:40.75–0:43.01 | The action panel opens into the accepted order over a sage field. |
 | 1:03.92–1:05.58 | The shared records blend straight into the ivory end card. |
 | 1:06.20 | The spoken EasyFarm cues the leaf slide and wordmark reveal. |
+
+A text-encoding fix restores the grower titles and the price and pickup ticket. Verified the affected frames against the final MP4. The audio stream is identical to the blended cut.
