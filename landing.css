@@ -73,7 +73,8 @@ h1, h2, h3, p { margin: 0; }
   transform: rotate(13deg);
 }
 .topbar nav { display: flex; gap: clamp(14px, 3vw, 45px); font-size: 13px; }
-.topbar nav a:hover, .footer a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.topbar nav a { display: inline-flex; align-items: center; min-height: 44px; }
+.topbar nav a:hover, .site-footer a:hover { text-decoration: underline; text-underline-offset: 4px; }
 .hero-body {
   align-self: flex-start;
   margin: 90px var(--gutter) 54px;
@@ -112,6 +113,8 @@ h1 { font-size: clamp(48px, 6.6vw, 111px); line-height: .92; text-shadow: 0 2px 
   background: #17271d;
   border: 1px solid #c6cfc2;
   font-size: 12px;
+  min-height: 44px;
+  border-radius: 6px;
 }
 .film-toggle:hover { background: #344c37; }
 .film-toggle[hidden] { display: none; }
@@ -131,11 +134,11 @@ h1 { font-size: clamp(48px, 6.6vw, 111px); line-height: .92; text-shadow: 0 2px 
 .workspace-name .seed { width: 8px; height: 11px; color: var(--acid); }
 .preview-label { font-size: 11px; color: #d2ddcc; }
 .role-switch { display: flex; margin-left: auto; padding: 2px; background: #30483b; }
-.role-switch button { color: #e5eddf; background: transparent; border: 0; padding: 5px 13px; font-size: 12px; }
+.role-switch button { color: #e5eddf; background: transparent; border: 0; padding: 5px 13px; min-height: 44px; font-size: 12px; }
 .role-switch button[aria-pressed="true"] { background: var(--acid); color: #253229; }
 .workspace-layout { display: grid; grid-template-columns: 186px minmax(0, 1fr); min-height: 415px; }
 .journey { padding: 15px 0; background: #e4e9dd; display: flex; flex-direction: column; }
-.journey button { display: flex; align-items: center; gap: 9px; font-size: 12px; text-align: left; min-height: 39px; color: #3c5344; background: transparent; border: 0; border-left: 2px solid transparent; padding: 6px 12px; }
+.journey button { display: flex; align-items: center; gap: 9px; font-size: 12px; text-align: left; min-height: 44px; color: #3c5344; background: transparent; border: 0; border-left: 2px solid transparent; padding: 6px 12px; }
 .journey button::before { content: ""; width: 7px; height: 7px; border-radius: 50%; border: 1px solid #78917c; flex: none; }
 .journey button:hover { background: #d7e2d2; }
 .journey button[aria-current="step"] { color: #22392a; background: #d1dfcb; border-left-color: #40634a; font-weight: 600; }
@@ -161,7 +164,7 @@ h1 { font-size: clamp(48px, 6.6vw, 111px); line-height: .92; text-shadow: 0 2px 
 .record-fields dt { color: #516658; }
 .record-fields dd { margin: 0; text-align: right; font-weight: 570; }
 .workspace-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 55px; padding: 8px clamp(11px, 2vw, 25px); border-top: 1px solid #d4d9ce; color: #526357; font-size: 12px; }
-#trade-next { display: inline-flex; justify-content: space-between; gap: 11px; align-items: center; padding: 7px 10px; color: #eef1e7; background: #304e3a; border: 1px solid #304e3a; white-space: nowrap; font-size: 12px; }
+#trade-next { display: inline-flex; justify-content: space-between; gap: 11px; align-items: center; min-height: 44px; padding: 7px 12px; color: #eef1e7; background: #304e3a; border: 1px solid #304e3a; white-space: nowrap; font-size: 12px; }
 #trade-next:hover { background: #456851; }
 
 .market-stage { background: #234135; color: #f3f3e7; padding: clamp(12px, 2.1vw, 26px); }
@@ -169,7 +172,7 @@ h1 { font-size: clamp(48px, 6.6vw, 111px); line-height: .92; text-shadow: 0 2px 
 .chart-head .record-label { color: #c7d7c9; }
 .chart-head h3 { font-size: clamp(21px, 2.4vw, 34px); }
 .periods { display: flex; gap: 4px; flex: none; }
-.periods button { color: #e4eee3; background: transparent; border: 1px solid #829889; padding: 5px 7px; font-size: 11px; }
+.periods button { color: #e4eee3; background: transparent; border: 1px solid #829889; min-height: 44px; padding: 5px 9px; font-size: 12px; }
 .periods button[aria-pressed="true"] { color: #26392c; background: var(--acid); border-color: var(--acid); }
 .chart-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(110px, .35fr); align-items: end; gap: 17px; }
 .chart-layout svg { display: block; width: 100%; margin-top: 13px; }
@@ -203,7 +206,7 @@ h1 { font-size: clamp(48px, 6.6vw, 111px); line-height: .92; text-shadow: 0 2px 
 .delivery-stage { grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); }
 .delivery-steps { display: grid; grid-template-columns: repeat(3, 1fr); list-style: none; padding: 0; margin: 13px 0 8px; position: relative; }
 .delivery-steps::before { position: absolute; top: 8px; left: 16.67%; right: 16.67%; content: ""; border-top: 1px solid #a7b9a8; }
-.delivery-steps button { display: grid; justify-items: center; gap: 4px; width: 100%; position: relative; border: 0; padding: 0 2px 5px; background: transparent; color: #395844; font-size: 11px; }
+.delivery-steps button { display: grid; justify-items: center; gap: 4px; width: 100%; min-height: 44px; position: relative; border: 0; padding: 0 2px 5px; background: transparent; color: #395844; font-size: 12px; }
 .delivery-steps span { display: block; border: 1px solid #75927a; background: #f7f5ec; border-radius: 50%; width: 17px; height: 17px; }
 .delivery-steps button[aria-pressed="true"] span, .delivery-steps button:hover span { background: #3f684b; border-color: #3f684b; }
 .delivery-record .record-time { font-size: 11px!important; margin-bottom: 2px; }
@@ -273,7 +276,7 @@ h1 { font-size: clamp(48px, 6.6vw, 111px); line-height: .92; text-shadow: 0 2px 
 .lot-strip { border-color: #b5cebb26; color: #c5d6c7; min-height: 39px; }
 .lot-strip strong { color: #f0f3e7; }
 #lot-state { color: #d6e8a5; }
-.stage-pane { min-height: 320px; padding: clamp(10px, 1.7vw, 22px); }
+.stage-pane { min-height: 350px; padding: clamp(10px, 1.7vw, 22px); }
 .stage-pane h3 { letter-spacing: -.032em; }
 .profile-stage {
   position: relative;
@@ -287,10 +290,12 @@ h1 { font-size: clamp(48px, 6.6vw, 111px); line-height: .92; text-shadow: 0 2px 
 .profile-photo {
   position: absolute;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
 }
 .profile-photo img { height: 100%; aspect-ratio: auto; object-position: center 43%; }
 .profile-copy {
+  position: relative;
+  z-index: 1;
   grid-column: 2;
   align-self: end;
   background: #1c3024c9;
@@ -341,6 +346,16 @@ h1 { font-size: clamp(48px, 6.6vw, 111px); line-height: .92; text-shadow: 0 2px 
 .conversion-paths small { font-size: 11px; margin-top: 2px; }
 @media (max-width: 760px) {
   .workspace { border-radius: 8px; }
+  .hero-body { padding-inline: 0; margin-bottom: 88px; }
+  .hero-actions { gap: 10px; }
+  .hero-actions .button { justify-content: center; padding-inline: 16px; }
+  .stage-pane { min-height: 0; }
+  .lot-strip { flex-wrap: wrap; gap: 3px 12px; }
+  .workspace-footer { flex-direction: column; gap: 8px; padding-block: 12px; }
+  #trade-next { width: 100%; justify-content: center; }
+  .chart-head { flex-direction: column; }
+  .profile-photo img { max-height: none; }
+  .profile-photo figcaption { top: 7px; bottom: auto; max-width: calc(100% - 14px); }
   .workspace-layout, .conversion-inner { grid-template-columns: 1fr; }
   .journey { padding: 0; gap: 0; }
   .profile-stage { grid-template-columns: 1fr; min-height: 295px; }

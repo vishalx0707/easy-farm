@@ -187,6 +187,9 @@ stagePane.addEventListener("click", event => {
   stagePane.querySelector(selector).focus({ preventScroll: true });
 });
 // Keep incoming tracking links useful without inventing an empty anchor target.
+window.addEventListener("hashchange", () => {
+  if (location.hash === "#trace") setStage(4, true);
+});
 if (location.hash === "#trace") {
   state.stage = 4;
   requestAnimationFrame(scrollToStage);
