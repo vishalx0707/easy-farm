@@ -1,49 +1,75 @@
 import { StrictMode, Component, lazy, Suspense, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import { ClerkProvider, useAuth } from "@clerk/react";
-import { useEffect, useState } from "react";
-import { MotionConfig } from "motion/react";
-
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { BrowserRouter, useSearchParams } from "react-router-dom";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { LeafLoader, OpeningSequence } from "@/components/leaf-loader";
-const Login = lazy(() =>
-  import("@/pages/auth").then((m) => ({ default: m.Login })),
-);
-const Onboarding = lazy(() =>
-  import("@/pages/auth").then((m) => ({ default: m.Onboarding })),
-);
-const Marketplace = lazy(() =>
-  import("@/pages/marketplace").then((m) => ({ default: m.Marketplace })),
-);
-const Trace = lazy(() =>
-  import("@/pages/marketplace").then((m) => ({ default: m.Trace })),
-);
+import type { State } from "@/lib/types";
 import "./styles.css";
+
+interface AuthConfig {
+  provider?: string;
+  publishableKey: string;
+  google: boolean;
+}
+
+const AUTH_CONFIG_CACHE_KEY = "easyfarm:auth-config:v1";
+const AUTH_CONFIG_TTL_MS = 5 * 60 * 1000;
+
+const TraceDetails = lazy(async () => {
+  const [{ OrderDetails, Empty }, { Brand }] = await Promise.all([
+    import("@/components/trade-details"),
+    import("@/components/brand"),
+  ]);
+  function PublicTrace() {
+    const [params] = useSearchParams(),
+      batch = params.get("batch") || "",
+      query = useQuery({
+        queryKey: ["trace", batch],
+        queryFn: async () => {
+          const response = await fetch(
+            "/api/trace/" + encodeURIComponent(batch),
+          );
+          const result = await response.json();
+          if (!response.ok) {
+            throw new Error(
+              result.error || "Could not load this record.",
+            );
+          }
+          return result as State;
+        },
+        retry: false,
+      });
+    return (
+      <div className="trace-page">
+        <header>
+          <Brand />
+          <a href="/login">Open your workspace</a>
+        </header>
+        <main>
+          {query.data?.orders[0] ? (
+            <OrderDetails
+              order={query.data.orders[0]}
+              data={query.data}
+              publicTrace
+            />
+          ) : query.error ? (
+            <Empty title="Trace record unavailable" copy={query.error.message} />
+          ) : (
+            <p role="status">Opening the saved trace record…</p>
+          )}
+        </main>
+      </div>
+    );
+  }
+  return { default: PublicTrace };
+});
+
 const cache = new QueryClient({
   defaultOptions: {
     queries: { retry: 1, refetchOnWindowFocus: true, staleTime: 5000 },
   },
 });
-function AuthRecovery() {
-  const { isLoaded } = useAuth();
-  const [slow, setSlow] = useState(false);
-  useEffect(() => {
-    if (isLoaded) {
-      setSlow(false);
-      return;
-    }
-    const timer = setTimeout(() => setSlow(true), 12000);
-    return () => clearTimeout(timer);
-  }, [isLoaded]);
-  return slow ? (
-    <div className="toast" role="alert">
-      Secure sign-in is taking longer than expected.{" "}
-      <button onClick={() => location.reload()}>Retry</button>
-    </div>
-  ) : null;
-}
+
 class ErrorBoundary extends Component<
   { children: ReactNode },
   { failed: boolean }
@@ -67,74 +93,118 @@ class ErrorBoundary extends Component<
     );
   }
 }
+
+function isValidAuthConfig(value: unknown): value is AuthConfig {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<AuthConfig>;
+  return (
+    candidate.google === true &&
+    typeof candidate.publishableKey === "string" &&
+    candidate.publishableKey.length > 0 &&
+    (!candidate.provider || candidate.provider === "clerk")
+  );
+}
+
+function readCachedAuthConfig(): AuthConfig | null {
+  try {
+    const raw = window.sessionStorage.getItem(AUTH_CONFIG_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as {
+      config?: unknown;
+      cachedAt?: number;
+    };
+    if (
+      typeof parsed?.cachedAt === "number" &&
+      Date.now() - parsed.cachedAt < AUTH_CONFIG_TTL_MS &&
+      isValidAuthConfig(parsed.config)
+    ) {
+      return parsed.config;
+    }
+  } catch {
+    /* Ignore storage errors in restricted contexts. */
+  }
+  return null;
+}
+
+function writeCachedAuthConfig(config: AuthConfig): void {
+  try {
+    window.sessionStorage.setItem(
+      AUTH_CONFIG_CACHE_KEY,
+      JSON.stringify({ config, cachedAt: Date.now() }),
+    );
+  } catch {
+    /* Ignore storage errors in restricted contexts. */
+  }
+}
+
+async function fetchAuthConfig(): Promise<AuthConfig> {
+  const response = await fetch("/api/auth-config", {
+    signal: AbortSignal.timeout(12000),
+  });
+  if (!response.ok) throw Error();
+  const config = await response.json();
+  if (!isValidAuthConfig(config)) throw Error();
+  writeCachedAuthConfig(config);
+  return config;
+}
+
+function preloadRouteChunk(pathname: string): void {
+  if (pathname.startsWith("/login")) {
+    void import("@/pages/auth");
+  } else if (pathname.startsWith("/onboarding")) {
+    void import("@/pages/onboarding");
+  } else {
+    void import("@/pages/marketplace");
+  }
+}
+
 async function boot() {
   const root = createRoot(document.getElementById("root")!);
   const wrap = (children: ReactNode) => (
     <StrictMode>
-      <MotionConfig reducedMotion="user">
-        <ErrorBoundary>
-          <QueryClientProvider client={cache}>
-            <TooltipProvider>
-              <OpeningSequence />
-              <Suspense
-                fallback={<LeafLoader overlay label="Opening your workspace" />}
-              >
-                {children}
-              </Suspense>
-            </TooltipProvider>
-          </QueryClientProvider>
-        </ErrorBoundary>
-      </MotionConfig>
+      <ErrorBoundary>
+        <QueryClientProvider client={cache}>
+          <OpeningSequence />
+          <Suspense
+            fallback={<LeafLoader overlay label="Opening your workspace" />}
+          >
+            {children}
+          </Suspense>
+        </QueryClientProvider>
+      </ErrorBoundary>
     </StrictMode>
   );
-  if (new URLSearchParams(location.search).has("batch")) {
+  const searchParams = new URLSearchParams(location.search);
+  if (searchParams.has("batch")) {
     root.render(
       wrap(
         <BrowserRouter>
-          <Trace />
+          <TraceDetails />
         </BrowserRouter>,
       ),
     );
     return;
   }
-  root.render(<LeafLoader overlay label="Opening EasyFarm" />);
+
+  preloadRouteChunk(location.pathname);
+
+  const cachedConfig = readCachedAuthConfig();
+  if (!cachedConfig) {
+    root.render(<LeafLoader overlay label="Opening EasyFarm" />);
+  } else {
+    void fetchAuthConfig().catch(() => {});
+  }
+
   try {
-    const response = await fetch("/api/auth-config", {
-      signal: AbortSignal.timeout(12000),
-    });
-    if (!response.ok) throw Error();
-    const config = await response.json();
-    const { ui } = await import("@clerk/ui");
-    if (!config.google || !config.publishableKey) throw Error();
+    const [config, { ClerkApp }, ui] = await Promise.all([
+      cachedConfig ? Promise.resolve(cachedConfig) : fetchAuthConfig(),
+      import("./clerk-app"),
+      searchParams.has("continue")
+        ? import("@clerk/ui").then((m) => m.ui)
+        : Promise.resolve(undefined),
+    ]);
     root.render(
-      wrap(
-        <ClerkProvider
-          publishableKey={config.publishableKey}
-          ui={ui}
-          signInUrl="/login"
-          signUpUrl="/login?continue=1"
-          signInFallbackRedirectUrl="/onboarding"
-          signUpFallbackRedirectUrl="/onboarding"
-          appearance={{
-            variables: {
-              colorPrimary: "#33492a",
-              fontFamily: "Montreal, Arial, sans-serif",
-              borderRadius: "9px",
-            },
-          }}
-        >
-          <AuthRecovery />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/login.html" element={<Login />} />
-              <Route path="/onboarding" element={<Onboarding />} />
-              <Route path="/onboarding.html" element={<Onboarding />} />
-              <Route path="*" element={<Marketplace />} />
-            </Routes>
-          </BrowserRouter>
-        </ClerkProvider>,
-      ),
+      wrap(<ClerkApp publishableKey={config.publishableKey} ui={ui} />),
     );
   } catch {
     root.render(
@@ -147,4 +217,5 @@ async function boot() {
     );
   }
 }
+
 void boot();

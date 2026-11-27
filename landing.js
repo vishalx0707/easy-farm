@@ -1,21 +1,46 @@
 const film = document.querySelector("#film");
-function autoplay() {
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches || navigator.connection?.saveData) return;
-  film.src = matchMedia("(max-width: 760px)").matches
-    ? film.dataset.src
-    : "assets/hero/easyfarm-film-desktop.mp4";
-  film.play().catch(() => {});
+const filmToggle = document.querySelector("#film-toggle");
+const motion = matchMedia("(prefers-reduced-motion: reduce)");
+let manuallyPaused = false;
+let resumeWhenVisible = false;
+function updateFilmControl() {
+  filmToggle.textContent = film.paused ? "Play film" : "Pause film";
 }
+async function playFilm() {
+  if (!film.getAttribute("src")) {
+    film.src = matchMedia("(max-width: 760px)").matches
+      ? film.dataset.src : "assets/hero/easyfarm-film-desktop.mp4";
+  }
+  try { await film.play(); } catch { /* Poster and manual play remain available. */ }
+  updateFilmControl();
+}
+film.addEventListener("play", updateFilmControl);
+film.addEventListener("pause", updateFilmControl);
+film.addEventListener("error", () => {
+  filmToggle.hidden = true;
+});
+filmToggle.addEventListener("click", () => {
+  manuallyPaused = !film.paused;
+  if (film.paused) void playFilm();
+  else film.pause();
+});
 window.addEventListener("load", () => {
-  if ("requestIdleCallback" in window) requestIdleCallback(autoplay, { timeout: 600 });
-  else setTimeout(autoplay, 250);
+  if (!motion.matches && !navigator.connection?.saveData && !manuallyPaused && !document.hidden) void playFilm();
 }, { once: true });
+motion.addEventListener("change", () => {
+  if (motion.matches) film.pause();
+});
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    resumeWhenVisible = !film.paused;
+    film.pause();
+  } else if (resumeWhenVisible && !manuallyPaused && !motion.matches) void playFilm();
+});
 
 const stagePane = document.querySelector("#stage-pane");
 const stageButtons = [...document.querySelectorAll("[data-stage]")];
 const roleButtons = [...document.querySelectorAll("[data-view]")];
 const next = document.querySelector("#trade-next");
-const motion = matchMedia("(prefers-reduced-motion: reduce)");
 const lot = { crop: "Red bell peppers", farm: "Meadow Lane Farm", grower: "Maya Rao", quantity: 240, offer: 37, pickup: "Friday · 8–10 am", id: "EF-024" };
 const prices = { 7: [34, 35, 34, 37, 36, 38, 36], 30: [31, 34, 32, 36, 35, 34, 37, 36, 38, 36] };
 const state = { stage: 0, role: "buyer", period: 7, deal: 0, delivery: 0 };
@@ -85,7 +110,7 @@ function delivery() {
   const { time, title, copy } = phases[state.delivery];
   return `<div class="delivery-stage"><div class="delivery-record"><p class="record-label">Order ${lot.id} · Sample batch record</p><h3>${title}</h3>
     <ol class="delivery-steps">${phases.map((phase, index) => `<li><button type="button" data-delivery="${index}" aria-pressed="${state.delivery === index}"><span aria-hidden="true"></span>${phase.name}</button></li>`).join("")}</ol>
-    <p class="record-time">${time}</p><p>${copy}</p><p class="batch-note">The batch QR links to origin and handling. Transaction history is recorded so later changes are detectable.</p></div>
+    <p class="record-time">${time}</p><p>${copy}</p><p class="batch-note">The batch QR links to origin and handling. This is an illustrative delivery record, not a live order.</p></div>
     <figure class="delivery-photo"><img src="assets/posters/05-warehouse-qr-scanning-4k.jpg" alt="Warehouse worker checking stock" decoding="async"></figure>
   </div>`;
 }
@@ -116,7 +141,7 @@ function render(animate = false) {
   ][stage];
   const action = stage === 3 ? ["Confirm pickup", "Accept sample offer", "Track this order"][state.deal]
     : stage === 4 ? "Back to crop listing" : labels[state.role][stage + 1];
-  next.firstChild.textContent = action + " ";
+  next.textContent = action;
   if (animate && !motion.matches && stagePane.animate) {
     stagePane.getAnimations().forEach(animation => animation.cancel());
     stagePane.animate([{ opacity: .62, transform: "translateY(6px)" }, { opacity: 1, transform: "translateY(0)" }],
@@ -127,41 +152,18 @@ function render(animate = false) {
 }
 
 const storyTrack = document.querySelector("#story-track");
-const sticky = matchMedia("(min-width: 761px) and (min-height: 690px) and (prefers-reduced-motion: no-preference)");
-const stickyTop = 20;
-
-function scrollToStage(index) {
-  if (!sticky.matches) {
-    storyTrack.scrollIntoView({ block: "start" });
-    return;
-  }
-  const travel = storyTrack.offsetHeight - storyTrack.firstElementChild.offsetHeight;
-  const start = scrollY + storyTrack.getBoundingClientRect().top - stickyTop;
-  window.scrollTo({ top: start + index * travel / 4 + (index === 0 ? 1 : 0), behavior: "instant" });
+function scrollToStage() {
+  storyTrack.scrollIntoView({ block: "start", behavior: motion.matches ? "instant" : "smooth" });
 }
-
 function setStage(index, move = false) {
   if (index !== state.stage) {
     state.stage = index;
     render(true);
   }
-  if (move) scrollToStage(index);
+  if (move) scrollToStage();
 }
 
-let scrollFrame = 0;
-function readScroll() {
-  scrollFrame = 0;
-  if (!sticky.matches) return;
-  const travelled = stickyTop - storyTrack.getBoundingClientRect().top;
-  if (travelled < 0) return;
-  const travel = storyTrack.offsetHeight - storyTrack.firstElementChild.offsetHeight;
-  setStage(Math.min(4, Math.round(travelled * 4 / travel)));
-}
-window.addEventListener("scroll", () => {
-  if (!scrollFrame) scrollFrame = requestAnimationFrame(readScroll);
-}, { passive: true });
-
-stageButtons.forEach((button, index) => button.addEventListener("click", () => setStage(index, sticky.matches)));
+stageButtons.forEach((button, index) => button.addEventListener("click", () => setStage(index)));
 roleButtons.forEach(button => button.addEventListener("click", () => {
   if (button.dataset.view === state.role) return;
   state.role = button.dataset.view;
@@ -171,7 +173,7 @@ next.addEventListener("click", () => {
   if (state.stage === 3 && state.deal < 2) {
     state.deal += 1;
     render(true);
-  } else setStage(state.stage === 4 ? 1 : state.stage + 1, sticky.matches);
+  } else setStage(state.stage === 4 ? 1 : state.stage + 1);
 });
 stagePane.addEventListener("click", event => {
   const button = event.target.closest("button");
@@ -184,18 +186,9 @@ stagePane.addEventListener("click", event => {
   const selector = period !== undefined ? `[data-period="${period}"]` : `[data-delivery="${milestone}"]`;
   stagePane.querySelector(selector).focus({ preventScroll: true });
 });
-document.querySelectorAll("[data-role], [data-route]").forEach(link => {
-  link.addEventListener("click", event => {
-    event.preventDefault();
-    const [role, index] = (link.dataset.route || link.dataset.role + ":0").split(":");
-    state.role = role;
-    state.stage = Number(index);
-    render(true);
-    scrollToStage(state.stage);
-  });
-});
-document.querySelector('a[href="#trace"]').addEventListener("click", event => {
-  event.preventDefault();
-  setStage(4, true);
-});
+// Keep incoming tracking links useful without inventing an empty anchor target.
+if (location.hash === "#trace") {
+  state.stage = 4;
+  requestAnimationFrame(scrollToStage);
+}
 render();

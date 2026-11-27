@@ -72,7 +72,7 @@ export function MarketPrices({
             const farm = data.farms.find((entry) => entry.id === lot.farm);
             return (
               <li key={lot.id}>
-                <img src={photo(lot.crop)} alt="" loading="lazy" />
+                <img src={photo(lot.crop)} alt="" loading="lazy" decoding="async" />
                 <div>
                   <strong>{lot.crop}</strong>
                   {!compact && <small>{farm?.name}</small>}

@@ -74,17 +74,35 @@
   overflow: visible;
   filter: drop-shadow(0 8px 18px rgba(10, 20, 10, 0.38))
     drop-shadow(0 1px 2px rgba(185, 232, 85, 0.22));
+  animation: ef-leaf-loader-pulse 2.2s ease-in-out infinite;
 }
 
 .ef-leaf-loader__stage--opening .ef-leaf-loader__svg {
   filter: drop-shadow(0 16px 34px rgba(8, 17, 8, 0.52))
     drop-shadow(0 2px 6px rgba(185, 232, 85, 0.24));
+  animation: ef-leaf-opening-enter 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .ef-leaf-loader__glass-sheen {
   transform-box: fill-box;
   transform-origin: center;
   animation: ef-leaf-sheen-drift 2.1s cubic-bezier(0.37, 0, 0.24, 1) infinite;
+}
+
+.ef-leaf-loader__opening-sheen {
+  animation: ef-leaf-opening-sheen 0.36s 0.05s cubic-bezier(0.22, 1, 0.36, 1)
+    both;
+}
+
+.ef-leaf-loader__stage--opening .ef-leaf-loader__vein-highlight {
+  stroke-dasharray: 1;
+  animation: ef-leaf-vein-highlight-draw 0.32s cubic-bezier(0.22, 1, 0.36, 1)
+    both;
+}
+
+.ef-leaf-loader__stage--opening .ef-leaf-loader__vein {
+  stroke-dasharray: 1;
+  animation: ef-leaf-vein-draw 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .ef-leaf-loader__label {
@@ -155,6 +173,17 @@
     inset 0 1px 0 rgba(248, 253, 235, 0.24),
     inset 0 -1px 0 rgba(25, 40, 20, 0.35),
     0 24px 60px rgba(7, 15, 7, 0.42);
+  animation: ef-opening-stage-enter 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ef-opening-overlay--exiting {
+  animation: ef-opening-overlay-exit 0.22s cubic-bezier(0.22, 1, 0.36, 1)
+    forwards;
+}
+
+.ef-opening-overlay--exiting .ef-opening-stage {
+  animation: ef-opening-stage-exit 0.22s cubic-bezier(0.22, 1, 0.36, 1)
+    forwards;
 }
 
 /* Fallback when backdrop-filter is unavailable */
@@ -164,6 +193,111 @@
     background:
       radial-gradient(ellipse at 50% 42%, rgba(112, 152, 58, 0.22), transparent 58%),
       linear-gradient(155deg, rgba(22, 35, 21, 0.97), rgba(33, 48, 29, 0.96));
+  }
+}
+
+@keyframes ef-leaf-loader-pulse {
+  0%,
+  100% {
+    opacity: 0.95;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes ef-leaf-opening-enter {
+  from {
+    opacity: 0.88;
+    transform: scale(0.92) rotate(-3deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes ef-leaf-opening-sheen {
+  0% {
+    opacity: 0;
+    transform: translateX(-75px);
+  }
+  45% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(155px);
+  }
+}
+
+@keyframes ef-leaf-vein-highlight-draw {
+  from {
+    stroke-dashoffset: 0.85;
+    stroke-opacity: 0.3;
+  }
+  to {
+    stroke-dashoffset: 0;
+    stroke-opacity: 0.46;
+  }
+}
+
+@keyframes ef-leaf-vein-draw {
+  from {
+    stroke-dashoffset: 0.85;
+    stroke-opacity: 0.45;
+  }
+  to {
+    stroke-dashoffset: 0;
+    stroke-opacity: 0.92;
+  }
+}
+
+@keyframes ef-opening-stage-enter {
+  from {
+    opacity: 0.92;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes ef-opening-overlay-exit {
+  from {
+    opacity: 1;
+    filter: blur(0px);
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    filter: blur(14px);
+    transform: scale(1.03);
+  }
+}
+
+@keyframes ef-opening-stage-exit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0px);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.05);
+    filter: blur(8px);
+  }
+}
+
+@keyframes ef-opening-overlay-exit-reduced {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }
 
@@ -198,12 +332,33 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ef-leaf-loader__aura,
-  .ef-leaf-loader__glass-sheen {
+  .ef-leaf-loader__svg,
+  .ef-leaf-loader__stage--opening .ef-leaf-loader__svg,
+  .ef-leaf-loader__glass-sheen,
+  .ef-leaf-loader__opening-sheen,
+  .ef-leaf-loader__stage--opening .ef-leaf-loader__vein-highlight,
+  .ef-leaf-loader__stage--opening .ef-leaf-loader__vein,
+  .ef-opening-stage,
+  .ef-opening-overlay--exiting .ef-opening-stage {
     animation: none;
+  }
+
+  .ef-leaf-loader__stage--opening .ef-leaf-loader__vein-highlight,
+  .ef-leaf-loader__stage--opening .ef-leaf-loader__vein {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
   }
 
   .ef-leaf-loader__glass-sheen {
     opacity: 0.32;
     transform: none;
+  }
+
+  .ef-leaf-loader__opening-sheen {
+    opacity: 0;
+  }
+
+  .ef-opening-overlay--exiting {
+    animation: ef-opening-overlay-exit-reduced 0.08s ease-out forwards;
   }
 }

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Minus, Plus, ShoppingCart } from "lucide-react";
-import { ApiError } from "@/lib/api";
 import { money, photo, photoCredit } from "@/lib/utils";
 import type {
   CheckoutItem,
@@ -26,6 +25,14 @@ type CartState = {
 };
 const emptyCart = (): CartState => ({ quantities: {} });
 const maxItems = 12;
+
+function isApiError(failure: unknown): failure is Error & { status: number } {
+  return (
+    failure instanceof Error &&
+    "status" in failure &&
+    typeof (failure as { status?: unknown }).status === "number"
+  );
+}
 
 export function orderable(lot: Lot) {
   return !lot.sample && lot.open && lot.quantity > 0;
@@ -179,7 +186,7 @@ export function ShopCard({
   return (
     <article className="lot-card shop-card">
       <div className="lot-image">
-        <img src={photo(lot.crop)} alt="" loading="lazy" />
+        <img src={photo(lot.crop)} alt="" loading="lazy" decoding="async" />
         {lot.sample && <span>Sample · browse only</span>}
         {photoCredit(lot.crop).startsWith("Generated") && (
           <small className="photo-credit">Generated image</small>
@@ -303,7 +310,7 @@ export function CartDialog({
       done(result);
     } catch (failure) {
       if (
-        failure instanceof ApiError &&
+        isApiError(failure) &&
         (failure.status === 400 ||
           (!cart.submitted && [401, 403, 409, 413].includes(failure.status)))
       ) {

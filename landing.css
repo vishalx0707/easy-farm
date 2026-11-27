@@ -43,6 +43,7 @@ h1, h2, h3, p { margin: 0; }
   object-fit: cover;
   object-position: center 49%;
 }
+.hero::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, transparent 35%, #0c1c1180 100%); }
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -93,6 +94,7 @@ h1 { font-size: clamp(48px, 6.6vw, 111px); line-height: .92; text-shadow: 0 2px 
   border: 1px solid #a8b4a7;
   font-size: 13px;
   font-weight: 620;
+  min-height: 44px;
 }
 .primary { background: var(--acid); color: #18221a; border-color: var(--acid); }
 .primary:hover { background: #f2f8d3; }
@@ -112,6 +114,7 @@ h1 { font-size: clamp(48px, 6.6vw, 111px); line-height: .92; text-shadow: 0 2px 
   font-size: 12px;
 }
 .film-toggle:hover { background: #344c37; }
+.film-toggle[hidden] { display: none; }
 
 .trade-wrap {
   width: min(1360px, calc(100% - 2 * var(--gutter)));
@@ -336,10 +339,6 @@ h1 { font-size: clamp(48px, 6.6vw, 111px); line-height: .92; text-shadow: 0 2px 
 .conversion-paths strong, .conversion-paths small { display: block; }
 .conversion-paths strong { font-size: 14px; font-weight: 570; }
 .conversion-paths small { font-size: 11px; margin-top: 2px; }
-@media (min-width: 761px) and (min-height: 690px) and (prefers-reduced-motion: no-preference) {
-  .story-track::after { content: ""; display: block; height: 142vh; }
-  .workspace { position: sticky; top: 20px; }
-}
 @media (max-width: 760px) {
   .workspace { border-radius: 8px; }
   .workspace-layout, .conversion-inner { grid-template-columns: 1fr; }

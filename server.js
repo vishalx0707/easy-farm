@@ -2,6 +2,7 @@ const { createServer } = require("node:http");
 const { createReadStream } = require("node:fs");
 const { stat } = require("node:fs/promises");
 const { extname, resolve, sep } = require("node:path");
+const { createGzip } = require("node:zlib");
 const marketplaceApi = require("./marketplace-api");
 
 const projectRoot = __dirname;
@@ -20,6 +21,16 @@ const types = {
   ".woff": "font/woff",
   ".svg": "image/svg+xml"
 };
+
+function cacheControlFor(page) {
+  if (/\/assets\/[^/]+-[A-Za-z0-9_-]{8,}\.(js|css|woff|woff2)$/.test(page)) {
+    return "public, max-age=31536000, immutable";
+  }
+  if (page.endsWith(".html") || page === "/landing.js" || page === "/landing.css") {
+    return "no-cache";
+  }
+  return "public, max-age=3600";
+}
 
 function createAppServer(api = marketplaceApi, { staticRoot = resolve(projectRoot,'dist') } = {}) { const root=staticRoot; return createServer(async (request, response) => {
   response.setHeader('X-Content-Type-Options','nosniff');
@@ -52,7 +63,7 @@ function createAppServer(api = marketplaceApi, { staticRoot = resolve(projectRoo
     return;
   }
 
-  const headers = { "Content-Type": type, "Cache-Control": /\/assets\/[^/]+-[A-Za-z0-9_-]{8,}\.(js|css|woff2)$/.test(page) ? "public, max-age=31536000, immutable" : "no-cache", "Accept-Ranges": "bytes" };
+  const headers = { "Content-Type": type, "Cache-Control": cacheControlFor(page), "Accept-Ranges": "bytes" };
   let start = 0;
   let end = info.size - 1;
   let status = 200;
@@ -79,7 +90,7 @@ function createAppServer(api = marketplaceApi, { staticRoot = resolve(projectRoo
   const stream = createReadStream(file, { start, end });
   stream.on("error", () => response.destroy());
   response.on("close", () => stream.destroy());
-  if(gzip){const compressor=require("node:zlib").createGzip();compressor.on("error",()=>response.destroy());stream.pipe(compressor).pipe(response);}else stream.pipe(response);
+  if(gzip){const compressor=createGzip();compressor.on("error",()=>response.destroy());stream.pipe(compressor).pipe(response);}else stream.pipe(response);
 }); }
 
 if(require.main===module)createAppServer().listen(port,host,()=>console.log(`EasyFarm running at http://${host}:${port}`));

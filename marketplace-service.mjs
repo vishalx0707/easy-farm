@@ -2,6 +2,10 @@ import domain from './marketplace-domain.cjs';
 import QRCode from 'qrcode/lib/server.js';
 import {resolveBackendRequestOrigin} from './origin.mjs';
 const json=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store'}});
+function decodeKey(raw){
+ try{return decodeURIComponent(raw);}
+ catch{throw Object.assign(new Error('Invalid trace identifier.'),{client:true});}
+}
 export async function handleMarketplace(request,{auth,store,config={}}){
  const url=new URL(request.url);
  try{
@@ -11,9 +15,12 @@ export async function handleMarketplace(request,{auth,store,config={}}){
   if(request.method==='GET'&&url.pathname==='/api/auth-config')return json(auth.publicConfig);
   // Legacy password/OAuth endpoints are deliberately not mounted.
   if(url.pathname.startsWith('/api/auth/')&&url.pathname!=='/api/auth/session')return json({error:'Use Google sign-in through Clerk.'},404);
-  if(request.method==='GET'&&url.pathname.startsWith('/api/trace/'))return json(domain.traceState(await store.read(),decodeURIComponent(url.pathname.slice(11))));
+  if(request.method==='GET'&&url.pathname.startsWith('/api/trace/')){
+   const key=decodeKey(url.pathname.slice(11));
+   return json(domain.traceState(await store.read(),key));
+  }
   if(request.method==='GET'&&url.pathname.startsWith('/api/qr/')){
-   const key=decodeURIComponent(url.pathname.slice(8));domain.traceState(await store.read(),key);
+   const key=decodeKey(url.pathname.slice(8));domain.traceState(await store.read(),key);
    const image=await QRCode.toBuffer(effectiveOrigin+'/app.html?batch='+encodeURIComponent(key),{margin:2,width:180});
    return new Response(image,{headers:{'Content-Type':'image/png','Cache-Control':'no-store'}});
   }
@@ -32,6 +39,11 @@ export async function handleMarketplace(request,{auth,store,config={}}){
    return json(await store.change(values,identity));
   }
   if(request.method==='GET'&&url.pathname==='/api/state'){
+   if(typeof store.portalState==='function'){
+    const result=await store.portalState(identity);
+    if(result?.onboarding)return json({error:'Complete your EasyFarm profile.',onboarding:true},409);
+    return json(result.state);
+   }
    const user=await store.user(identity);
    if(!['buyer','grower'].includes(user.role))return json({error:'Complete your EasyFarm profile.',onboarding:true},409);
    return json(await store.state(identity));

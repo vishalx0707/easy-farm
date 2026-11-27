@@ -13,6 +13,7 @@ const seed = {
   ],
   offers: [], orders: [], history: []
 };
+const seedFarmById = new Map(seed.farms.map((f) => [f.id, f]));
 function requireThat(test, message) {
   if (!test) throw Object.assign(new Error(message), { client: true });
 }
@@ -203,13 +204,51 @@ function ensureFarm(db,user){
   db.farms.push({id:id('farm'),owner:user.id,name:user.organization,person:user.name,location:user.location||'Location not supplied',bio:'',image:'assets/posters/03-tomato-harvest-4k.jpg'});
   return true;
 }
-function visibleState(db,user){
-  const own=farm=>db.farms.some(f=>f.id===farm&&f.owner===user.id);
-  const offers=db.offers.filter(o=>user.role==='grower'?own(o.farm):o.buyer===user.id);
-  const orders=db.orders.filter(o=>user.role==='grower'?own(o.farm):o.buyer===user.id);
-  // Refresh only the presentation of known unowned examples; preserve stored and owned farm records.
-  const farms=db.farms.map(({owner,...farm})=>({...farm,...(!owner&&seed.farms.some(f=>f.id===farm.id)?{location:seed.farms.find(f=>f.id===farm.id).location,bio:seed.farms.find(f=>f.id===farm.id).bio}:{}),owned:owner===user.id,sample:!owner}));
-  return {user:{id:user.id,name:user.name,organization:user.organization,location:user.location,role:user.role,email:user.email},farms,listings:db.listings.map(l=>({...l,sample:!db.farms.find(f=>f.id===l.farm)?.owner})),offers,orders,history:db.history.filter(h=>orders.some(o=>o.id===h.order))};
+function visibleState(db, user) {
+  const farmById = new Map();
+  const ownedFarms = new Set();
+  const farms = new Array(db.farms.length);
+  for (let i = 0; i < db.farms.length; i++) {
+    const f = db.farms[i];
+    if (!farmById.has(f.id)) farmById.set(f.id, f);
+    const owned = f.owner === user.id;
+    if (owned) ownedFarms.add(f.id);
+    const { owner, ...farm } = f;
+    // Refresh only the presentation of known unowned examples; preserve stored and owned farm records.
+    const seedFarm = !owner ? seedFarmById.get(farm.id) : null;
+    farms[i] = {
+      ...farm,
+      ...(seedFarm ? { location: seedFarm.location, bio: seedFarm.bio } : {}),
+      owned,
+      sample: !owner,
+    };
+  }
+  const isGrower = user.role === "grower";
+  const offers = db.offers.filter((o) =>
+    isGrower ? ownedFarms.has(o.farm) : o.buyer === user.id,
+  );
+  const orders = db.orders.filter((o) =>
+    isGrower ? ownedFarms.has(o.farm) : o.buyer === user.id,
+  );
+  const orderIds = new Set(orders.map((o) => o.id));
+  return {
+    user: {
+      id: user.id,
+      name: user.name,
+      organization: user.organization,
+      location: user.location,
+      role: user.role,
+      email: user.email,
+    },
+    farms,
+    listings: db.listings.map((l) => ({
+      ...l,
+      sample: !farmById.get(l.farm)?.owner,
+    })),
+    offers,
+    orders,
+    history: db.history.filter((h) => orderIds.has(h.order)),
+  };
 }
 function traceState(db,key){
   const order=db.orders.find(o=>o.id===key);
@@ -219,15 +258,46 @@ function traceState(db,key){
   const {owner,...farm}=find(db.farms,order.farm,'Farm');
   return {farms:[farm],listings:[],offers:[],orders:[record],history:db.history.filter(h=>h.order===key)};
 }
-function portalUser(db,identity){
-  db.profiles||=[];
-  const profile=db.profiles.find(p=>p.clerkId===identity.clerkId);
-  if(profile)return {...profile,name:identity.name,email:identity.email};
+function portalUserMeta(db, identity) {
+  db.profiles ||= [];
+  const profile = db.profiles.find((p) => p.clerkId === identity.clerkId);
+  if (profile) {
+    return {
+      user: { ...profile, name: identity.name, email: identity.email },
+      linked: false,
+    };
+  }
   // Legacy accounts can be linked only by the verified Google provider subject
   // AND matching verified email, never by email alone or client metadata.
-  const legacy=db.profiles.find(p=>!p.clerkId&&p.googleSubject&&p.googleSubject===identity.googleSubject&&p.email===identity.email);
-  if(legacy){legacy.clerkId=identity.clerkId;return {...legacy,name:identity.name,email:identity.email};}
-  return {id:identity.clerkId,clerkId:identity.clerkId,name:identity.name,email:identity.email,role:'pending',organization:'',location:''};
+  const legacy = db.profiles.find(
+    (p) =>
+      !p.clerkId &&
+      p.googleSubject &&
+      p.googleSubject === identity.googleSubject &&
+      p.email === identity.email,
+  );
+  if (legacy) {
+    legacy.clerkId = identity.clerkId;
+    return {
+      user: { ...legacy, name: identity.name, email: identity.email },
+      linked: true,
+    };
+  }
+  return {
+    user: {
+      id: identity.clerkId,
+      clerkId: identity.clerkId,
+      name: identity.name,
+      email: identity.email,
+      role: "pending",
+      organization: "",
+      location: "",
+    },
+    linked: false,
+  };
+}
+function portalUser(db, identity) {
+  return portalUserMeta(db, identity).user;
 }
 function completeProfile(db,identity,values){
   const user=portalUser(db,identity);
@@ -242,4 +312,4 @@ function actionResult(db, values, user) {
   const result = apply(db, values, user);
   return typeof result === "string" ? { id: result } : result;
 }
-module.exports={seed,apply,actionResult,ensureFarm,visibleState,traceState,portalUser,completeProfile};
+module.exports={seed,apply,actionResult,ensureFarm,visibleState,traceState,portalUser,portalUserMeta,completeProfile};

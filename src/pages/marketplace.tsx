@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useDeferredValue } from "react";
-import { motion } from "motion/react";
+import { useState, useEffect, useRef, useDeferredValue, lazy, Suspense } from "react";
+import { motion, MotionConfig } from "motion/react";
 import { useAuth, useClerk } from "@clerk/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -47,17 +47,26 @@ import {
 import { MarketHome } from "@/components/market-home";
 import { MarketPrices } from "@/components/market-prices";
 import {
-  CartDialog,
   ShopCard,
   cartAddError,
   orderable,
   useBuyerCart,
 } from "@/components/buyer-cart";
-import { LocationDialog } from "@/components/location-dialog";
 import { LeafLoader } from "@/components/leaf-loader";
 import { Brand } from "@/components/brand";
 import { Animate, useSmoothWorkspace } from "@/components/motion";
-import { TradeEditor, type Edit } from "@/components/trade-editor";
+import type { Edit } from "@/components/trade-editor";
+const CartDialog = lazy(() =>
+  import("@/components/buyer-cart").then((m) => ({ default: m.CartDialog })),
+);
+const LocationDialog = lazy(() =>
+  import("@/components/location-dialog").then((m) => ({
+    default: m.LocationDialog,
+  })),
+);
+const TradeEditor = lazy(() =>
+  import("@/components/trade-editor").then((m) => ({ default: m.TradeEditor })),
+);
 import {
   LotCard,
   LotDetails,
@@ -492,6 +501,7 @@ export function Marketplace() {
                   src={"/" + f.image.replace(/^\//, "")}
                   alt="Representative farm"
                   loading="lazy"
+                  decoding="async"
                 />
                 <div>
                   <p className="eyebrow">
@@ -553,11 +563,12 @@ export function Marketplace() {
       <TradeList view={view} data={data} role={role} farm={farm} go={go} />
     );
   return (
-    <div
-      className="app-shell"
-      data-portal={role}
-      data-view={type ? "detail" : view}
-    >
+    <MotionConfig reducedMotion="user">
+      <div
+        className="app-shell"
+        data-portal={role}
+        data-view={type ? "detail" : view}
+      >
       <aside className="app-sidebar">
         <Brand />
         {role === "grower" && (
@@ -674,23 +685,27 @@ export function Marketplace() {
         </nav>
       </main>
       {role === "buyer" && cartOpen && (
-        <CartDialog
-          data={data}
-          cart={cart}
-          close={() => setCartOpen(false)}
-          submit={checkout}
-          done={checkoutDone}
-          refresh={refreshMarket}
-        />
+        <Suspense fallback={null}>
+          <CartDialog
+            data={data}
+            cart={cart}
+            close={() => setCartOpen(false)}
+            submit={checkout}
+            done={checkoutDone}
+            refresh={refreshMarket}
+          />
+        </Suspense>
       )}
       {locationOpen && (
-        <LocationDialog
-          current={user.location}
-          close={() => setLocationOpen(false)}
-          save={(value) =>
-            mutation.mutateAsync({ action: "location", location: value })
-          }
-        />
+        <Suspense fallback={null}>
+          <LocationDialog
+            current={user.location}
+            close={() => setLocationOpen(false)}
+            save={(value) =>
+              mutation.mutateAsync({ action: "location", location: value })
+            }
+          />
+        </Suspense>
       )}
       {notice && (
         <div className="toast" role="status">
@@ -705,12 +720,14 @@ export function Marketplace() {
         </div>
       )}
       {edit && (
-        <TradeEditor
-          key={edit.kind + ("lot" in edit ? edit.lot?.id || "new" : "")}
-          edit={edit}
-          onClose={() => setEdit(null)}
-          onSave={save}
-        />
+        <Suspense fallback={null}>
+          <TradeEditor
+            key={edit.kind + ("lot" in edit ? edit.lot?.id || "new" : "")}
+            edit={edit}
+            onClose={() => setEdit(null)}
+            onSave={save}
+          />
+        </Suspense>
       )}
       <Dialog open={account} onOpenChange={setAccount}>
         <DialogContent className="account-dialog">
@@ -753,7 +770,8 @@ export function Marketplace() {
           </Button>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </MotionConfig>
   );
 }
 function Catalogue({

@@ -121,7 +121,12 @@ export function MarketHome({
           </Button>
         </div>
         <div className="feature-image">
-          <img src={photo(featured?.crop)} alt="Representative produce" />
+          <img
+            src={photo(featured?.crop)}
+            alt="Representative produce"
+            decoding="async"
+            fetchPriority="high"
+          />
           <span>{photoCredit(featured?.crop)}</span>
         </div>
       </article>
@@ -143,7 +148,7 @@ export function MarketHome({
                   go(grower ? "listings" : "catalogue", "lot", l.id)
                 }
               >
-                <img src={photo(l.crop)} alt="" />
+                <img src={photo(l.crop)} alt="" decoding="async" />
                 <span>
                   <strong>{l.crop}</strong>
                   <small>

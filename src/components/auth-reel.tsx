@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { Pause, Play } from "lucide-react";
-import gsap from "gsap";
 import "./auth-reel.css";
 
 const clips = ["/assets/auth/harvest.mp4", "/assets/auth/handoff.mp4"];
@@ -37,14 +36,29 @@ export function AuthReel() {
     let active = 0,
       held = false,
       switching = false,
-      disposed = false;
-    let fade: gsap.core.Tween | null = null;
+      disposed = false,
+      preloadedSecond = false;
+    let fade: Animation | null = null;
     const failed = new Set<number>();
     const running = () => !held && !document.hidden;
+    const ensureSecondLoaded = () => {
+      if (preloadedSecond || failed.has(1)) return;
+      preloadedSecond = true;
+      if (videos[1].preload === "none") {
+        videos[1].preload = "auto";
+        videos[1].load();
+      }
+    };
+    const cancelFade = () => {
+      const activeFade = fade;
+      fade = null;
+      activeFade?.cancel();
+    };
     const play = async (video: HTMLVideoElement) => {
       try {
         await video.play();
         if (!disposed) setBlocked(false);
+        if (video === videos[0]) ensureSecondLoaded();
       } catch {
         if (!disposed && running()) setBlocked(true);
       }
@@ -58,7 +72,7 @@ export function AuthReel() {
       videos.forEach((v, i) => {
         if (!failed.has(i) && (i === active || fade)) void play(v);
       });
-      fade?.resume();
+      fade?.play();
     };
     control.current = (pause) => {
       held = pause;
@@ -91,22 +105,33 @@ export function AuthReel() {
       }
       videos[from].style.zIndex = "1";
       videos[next].style.zIndex = "2";
-      fade = gsap.fromTo(
-        videos[next],
-        { opacity: 0 },
-        {
-          opacity: 1,
-          duration: 1.2,
-          ease: "sine.inOut",
-          onComplete: () => {
-            videos[from].pause();
-            videos[from].style.opacity = "0";
-            active = next;
+      videos[next].style.opacity = "1";
+      if (typeof videos[next].animate === "function") {
+        const anim = videos[next].animate([{ opacity: 0 }, { opacity: 1 }], {
+          duration: 1200,
+          easing: "ease-in-out",
+        });
+        fade = anim;
+        anim.onfinish = () => {
+          if (fade !== anim) return;
+          videos[from].pause();
+          videos[from].style.opacity = "0";
+          active = next;
+          fade = null;
+          switching = false;
+        };
+        anim.oncancel = () => {
+          if (fade === anim) {
             fade = null;
             switching = false;
-          },
-        },
-      );
+          }
+        };
+      } else {
+        videos[from].pause();
+        videos[from].style.opacity = "0";
+        active = next;
+        switching = false;
+      }
     };
     const tick = () => {
       const current = videos[active];
@@ -125,10 +150,10 @@ export function AuthReel() {
     };
     const errors = videos.map((_, i) => () => {
       failed.add(i);
-      fade?.kill();
-      fade = null;
+      cancelFade();
       const next = 1 - i;
       if (!failed.has(next)) {
+        if (next === 1) ensureSecondLoaded();
         active = next;
         videos[next].loop = true;
         videos[next].style.opacity = "1";
@@ -147,7 +172,7 @@ export function AuthReel() {
     ready();
     return () => {
       disposed = true;
-      fade?.kill();
+      cancelFade();
       control.current = () => {};
       document.removeEventListener("visibilitychange", sync);
       videos.forEach((v, i) => {
@@ -163,7 +188,7 @@ export function AuthReel() {
   return (
     <>
       <div className="auth-reel" aria-hidden="true">
-        <img src="/assets/auth/harvest-poster.webp" alt="" />
+        <img src="/assets/auth/harvest-poster.webp" alt="" decoding="async" />
         {motion &&
           clips.map((src, i) => (
             <video
@@ -174,7 +199,7 @@ export function AuthReel() {
               src={src}
               muted
               playsInline
-              preload="auto"
+              preload={i === 0 ? "metadata" : "none"}
               poster="/assets/auth/harvest-poster.webp"
               style={{ opacity: i === 0 ? 1 : 0 }}
             />

@@ -1,8 +1,5 @@
-import { useEffect, useRef, type ReactNode } from "react";
-import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
-import Lenis from "lenis";
-gsap.registerPlugin(useGSAP);
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
+
 export function Animate({
   children,
   identity,
@@ -11,30 +8,35 @@ export function Animate({
   identity: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  useGSAP(
-    () => {
-      if (!matchMedia("(prefers-reduced-motion: reduce)").matches)
-        gsap.fromTo(
-          ref.current,
-          { opacity: 0, y: 8, filter: "blur(3px)" },
-          {
-            opacity: 1,
-            y: 0,
-            filter: "blur(0px)",
-            duration: 0.42,
-            ease: "power2.out",
-            clearProps: "transform,filter,opacity",
-          },
-        );
-    },
-    { scope: ref, dependencies: [identity], revertOnUpdate: true },
-  );
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (
+      !el ||
+      typeof el.animate !== "function" ||
+      matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+    const animation = el.animate(
+      [
+        { opacity: 0, transform: "translateY(8px)", filter: "blur(3px)" },
+        { opacity: 1, transform: "translateY(0)", filter: "blur(0px)" },
+      ],
+      {
+        duration: 420,
+        easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+        fill: "none",
+      },
+    );
+    return () => animation.cancel();
+  }, [identity]);
   return (
     <div ref={ref} className="view-enter">
       {children}
     </div>
   );
 }
+
 export function useSmoothWorkspace(
   ref: React.RefObject<HTMLDivElement | null>,
   content: React.RefObject<HTMLDivElement | null>,
@@ -47,17 +49,26 @@ export function useSmoothWorkspace(
       !content.current ||
       !matchMedia("(pointer:fine)").matches ||
       matchMedia("(prefers-reduced-motion:reduce)").matches
-    )
+    ) {
       return;
-    const lenis = new Lenis({
-      wrapper: ref.current,
-      content: content.current,
-      autoRaf: true,
-      duration: 0.75,
-      smoothWheel: true,
-      prevent: (node) =>
-        !!node.closest('[data-lenis-prevent],input,textarea,[role="dialog"]'),
+    }
+    let cancelled = false;
+    let instance: { destroy: () => void } | null = null;
+    void import("lenis").then(({ default: Lenis }) => {
+      if (cancelled || !ref.current || !content.current) return;
+      instance = new Lenis({
+        wrapper: ref.current,
+        content: content.current,
+        autoRaf: true,
+        duration: 0.75,
+        smoothWheel: true,
+        prevent: (node) =>
+          !!node.closest('[data-lenis-prevent],input,textarea,[role="dialog"]'),
+      });
     });
-    return () => lenis.destroy();
+    return () => {
+      cancelled = true;
+      instance?.destroy();
+    };
   }, [ref, content, ready]);
 }

@@ -221,6 +221,7 @@ export function createVercelProxyHandler(
     }
 
     if (upstream.status >= 300 && upstream.status < 400) {
+      upstream.body?.cancel?.().catch(() => {});
       return jsonResponse(
         { error: "The marketplace backend is temporarily unavailable." },
         502,
@@ -234,8 +235,7 @@ export function createVercelProxyHandler(
     responseHeaders.set("Vary", "Origin, Authorization");
     responseHeaders.set("X-Content-Type-Options", "nosniff");
 
-    const responseBody = await upstream.arrayBuffer();
-    return new Response(responseBody, {
+    return new Response(upstream.body, {
       status: upstream.status,
       headers: responseHeaders,
     });

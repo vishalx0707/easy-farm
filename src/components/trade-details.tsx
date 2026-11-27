@@ -61,7 +61,12 @@ export function LotCard({ lot, farm, go }: { lot: Lot; farm?: Farm; go: Go }) {
         aria-label={"View " + lot.crop}
         onClick={() => go(view, "lot", lot.id)}
       >
-        <img src={photo(lot.crop)} alt={lot.crop} loading="lazy" />
+        <img
+          src={photo(lot.crop)}
+          alt={lot.crop}
+          loading="lazy"
+          decoding="async"
+        />
         {photoCredit(lot.crop).startsWith("Generated") && (
           <small className="photo-credit">Generated image</small>
         )}
@@ -127,7 +132,12 @@ export function LotDetails({
   return (
     <div className="detail-layout">
       <div className="detail-visual">
-        <img src={photo(lot.crop)} alt={lot.crop} />
+        <img
+          src={photo(lot.crop)}
+          alt={lot.crop}
+          decoding="async"
+          fetchPriority="high"
+        />
         <p>{photoCredit(lot.crop)}</p>
       </div>
       <section className="glass panel">
@@ -236,6 +246,7 @@ export function FarmDetails({
         <img
           src={"/" + farm.image.replace(/^\//, "")}
           alt="Representative farm"
+          decoding="async"
         />
         <div>
           <p className="eyebrow">
@@ -618,6 +629,7 @@ export function OrderDetails({
             height="156"
             src={"/api/qr/" + order.id}
             alt={"QR code for order " + order.id}
+            decoding="async"
           />
         </div>
         <a href={"/app.html?batch=" + encodeURIComponent(order.id)}>

@@ -27,9 +27,14 @@ export function normalizeOrigin(value) {
   }
 }
 
+const MAX_ORIGIN_CACHE = 32;
+const originListCache = new Map();
+
 export function parseOriginList(value) {
+  if (typeof value !== "string") return new Set();
+  const cached = originListCache.get(value);
+  if (cached) return cached;
   const origins = new Set();
-  if (typeof value !== "string") return origins;
   for (const part of value.split(",")) {
     const trimmed = part.trim();
     if (!trimmed) continue;
@@ -39,6 +44,10 @@ export function parseOriginList(value) {
     }
     origins.add(origin);
   }
+  if (originListCache.size >= MAX_ORIGIN_CACHE) {
+    originListCache.delete(originListCache.keys().next().value);
+  }
+  originListCache.set(value, origins);
   return origins;
 }
 
