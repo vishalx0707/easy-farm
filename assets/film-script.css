@@ -79,7 +79,7 @@ a { color: inherit; }
 .read-key strong { color: var(--ink); font-weight: 575; }
 .read-key a { text-decoration: underline; text-decoration-color: #8c9783; text-underline-offset: 3px; }
 .cut-list { list-style: none; display: grid; gap: 22px; padding: 19px 0 0; margin: 0; }
-.beat { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 14px; align-items: baseline; }
+.beat { display: grid; grid-template-columns: 124px minmax(0, 1fr); gap: 14px; align-items: baseline; }
 .time { color: #49603d; font-variant-numeric: tabular-nums; font-size: .79rem; font-weight: 570; white-space: nowrap; }
 .time span { color: var(--muted); font-weight: 425; }
 .direction { max-width: 69ch; color: var(--muted); font-size: clamp(.85rem, 1.5vw, .95rem); line-height: 1.55; }
@@ -105,6 +105,6 @@ a { color: inherit; }
   .wrap { width: calc(100% - 36px); }
   .topline { min-height: 49px; }
   .cut-list { gap: 19px; }
-  .beat { grid-template-columns: 65px minmax(0, 1fr); gap: 8px; }
-  .time { font-size: .69rem; }
+  .beat { grid-template-columns: 88px minmax(0, 1fr); gap: 8px; }
+  .time { font-size: .67rem; }
 }

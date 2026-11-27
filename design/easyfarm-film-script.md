@@ -1,113 +1,143 @@
 # Twenty kilos
 
-**EasyFarm brand film · 1:11 target runtime · One narrator**
+**EasyFarm brand film · 1:11 · One narrator**
 
-**0:00–0:02**  
-*Tomatoes settle on a scale. Let the crate hit the metal before the voice comes in.*
+**0:00.00–0:01.53**
 
-**0:02–0:04**  
-*Hold on the weight.*
+*Cold open on tomatoes in crates. A low crate hit starts the mix.*
 
 Twenty kilos of tomatoes.
 
-**0:04–0:08**  
-*Cut to the buyer checking the afternoon’s produce list.*
+**0:01.53–0:03.53**
 
-Can I collect them this afternoon?
+*Tomatoes moving through packing. Keep the shot tight.*
 
-**0:08–0:10**  
-*Cut across the phone ring into the greenhouse. The grower finishes picking a tomato.*
+**0:03.53–0:06.03**
 
-It’s a simple question.
+*A paper order slip isolates the quantity and afternoon pickup.*
 
-**0:10–0:15**  
-*Stay with the grower as she checks the crates she has ready.*
+Can I collect them this afternoon? It sounds like a simple question.
 
-But to answer it, the farmer has to check what’s ready,
+**0:06.03–0:08.30**
 
-**0:15–0:18**  
-*One crate already has a buyer’s name on it.*
+*The buyer checks a phone beside the produce shelves.*
 
-what’s already spoken for,
+But the grower has to check what’s ready,
 
-**0:18–0:21**  
-*Cut to a price in the grower’s notebook.*
+**0:08.30–0:10.50**
 
-and whether the price makes sense.
+*The grower checks the greenhouse rows.*
 
-**0:21–0:25**  
-*Back with the buyer. They cross one supplier off the list and dial the next.*
+what’s already promised,
 
-If the lot is gone, the buyer starts calling again.
+**0:10.50–0:12.27**
 
-**0:25–0:27**  
-*One unanswered ring. Hold for a breath.*
+*Gloved hands inspect the tomatoes still on the vine.*
 
-**0:27–0:31**  
-*Return to the grower. She posts the tomatoes she has available.*
+and what tomatoes are going for today.
 
-What if the farmer could list the crop once,
+**0:12.27–0:15.23**
 
-**0:31–0:34**  
-*Match the quantity on her listing to the one the buyer opens. Hold on Meadow Lane Farm · 20 kg available.*
+*Cut into a paper harvest record. Isolate the price per kilo.*
 
-and buyers could see what’s ready
+If that lot’s gone, the buyer starts calling again.
 
-**0:34–0:37**  
-*The buyer opens a message to that farm.*
+**0:15.23–0:17.06**
+
+*Inventory clipboard. Hands keep the focus on the list.*
+
+**0:17.06–0:18.55**
+
+*Back to the buyer trying the phone.*
+
+What if buyers could see what’s ready
+
+**0:18.55–0:21.57**
+
+*Hold the greenhouse team in motion as the question turns to the grower.*
 
 and speak to the grower directly?
 
-**0:37–0:40**  
-*The EasyFarm leaf appears over the listing. Let the shot hold after the line.*
+**0:21.57–0:24.75**
+
+*The paper slip moves out as the phone rotates in over the greenhouse. Let the edge glass and music crossfade carry the change.*
 
 That’s EasyFarm.
 
-**0:40–0:43**  
-*An offer arrives for the same 20 kg. Show ₹29/kg beside a small sample market range.*
+**0:24.75–0:30.95**
 
-**0:43–0:46**  
-*Hold on the comparison long enough to read it. Cut to the grower as she decides.*
+*Hold on the grower’s listing. Emphasize quantity, asking price, pickup time and Publish harvest in sequence.*
 
-She checks the going price.
+List your tomatoes. Add how much you have, your price, and when a buyer can collect. A buyer finds your listing and sends an offer.
 
-**0:46–0:49**  
-*She replies to the buyer with a pickup time.*
+**0:30.95–0:33.55**
 
-Twenty-nine a kilo works for her.
+*Match the crop photo into the buyer’s listing and open the offer action.*
 
-**0:49–0:53**  
-*The buyer confirms. The pickup window appears on both sides of the order.*
+**0:33.55–0:35.23**
 
-They agree on pickup, between four and six.
+*The offer arrives. Show ₹29/kg and 20 kg on the same screen.*
 
-**0:53–0:56**  
-*She accepts the order. Cut to a crate settling onto the packing bench. Let the narration drop out.*
+Check the market prices, talk it through in a message,
 
-**0:56–0:59**  
-*The grower packs the last tomatoes. Carry the sound of the crate into the next shot.*
+**0:35.23–0:37.05**
 
-**0:59–1:02**  
-*The buyer sees Ready for pickup, with the farm name and agreed window still there.*
+*Pull the offer and illustrative market range into one frosted price panel.*
 
-**1:02–1:04**  
-*Cut to the buyer arriving at that farm. Give the grower a moment in frame.*
+and tap Accept Offer.
 
-**1:04–1:06**  
-*The crate changes hands. Stay through the moment the grower lets go.*
+**0:37.05–0:39.80**
 
-**1:06–1:08**  
-*Cut to the leaf and wordmark. Leave a half-beat after the name.*
+*Match into the offer thread. Open the pickup conversation and land on Accept offer.*
 
-EasyFarm.
+Now you both see the same order.
 
-**1:08–1:11**  
-*Bring in the tagline with the voice. Hold the complete lockup to 1:11.*
+**0:39.80–0:47.18**
 
-Farming made easy.
+*Match to the confirmed order. Give price, quantity and pickup time space to read.*
 
-## Read and sound notes
+Twenty kilos, at twenty-nine a kilo. Pickup from four to six. Once they’re packed, mark them ready.
 
-Read the first question like someone with an afternoon deadline. Keep the rest plain and close. Let the narrator’s sentences run across the cuts. Use the ring, greenhouse ambience and the crate to carry the gaps in the voice.
+**0:47.18–0:49.09**
 
-The farm and prices are illustrative. Keep the same farm, quantity and pickup window visible as the order moves through the app.
+*Cut back to crates of tomatoes with the packing impact and paper sound.*
+
+**0:49.09–0:53.86**
+
+*Show the same order moving to Ready for pickup. Hold the farm name and 4–6 pm window.*
+
+The buyer can see when to come and where to go. At the farm, the buyer checks the order
+
+**0:53.86–0:56.17**
+
+*Return to the greenhouse without losing the grower.*
+
+and collects the crate.
+
+**0:56.17–0:58.26**
+
+*The buyer arrives for collection. Use the human cut before the close handoff.*
+
+The grower marks it picked up,
+
+**0:58.26–1:01.15**
+
+*Hold through the basket handoff and the second crate sound.*
+
+and both sides have a record.
+
+**1:01.15–1:05.13**
+
+*Cut from the handoff to Picked up on the same order.*
+
+**1:05.13–1:11.00**
+
+*Show the leaf alone, slide it left as EasyFarm appears, then reveal Farming made easy. underneath.*
+
+EasyFarm. Farming made easy.
+
+## Edit notes
+
+The rendered voice comes from the user’s saved ElevenLabs voice “voice for grit video.” Framing and phone motion draw from the supplied device and UI references. The film uses stylized recreations of the EasyFarm workflows with an illustrative farm, order and market range.
+
+The [audio cue sheet](easyfarm-audio-cues.md) gives the score transition, sound effects and master details.
