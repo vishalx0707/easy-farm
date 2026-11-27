@@ -164,13 +164,7 @@ function OliveGlassLeaf({ variant, reducedMotion }: OliveGlassLeafProps) {
           </linearGradient>
 
           {/* Moving glass caustic band */}
-          <linearGradient
-            id={sheenGradId}
-            x1="0%"
-            y1="0%"
-            x2="100%"
-            y2="0%"
-          >
+          <linearGradient id={sheenGradId} x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
             <stop offset="45%" stopColor="#f5fce4" stopOpacity="0.45" />
             <stop offset="60%" stopColor="#d9f48c" stopOpacity="0.24" />
@@ -184,8 +178,14 @@ function OliveGlassLeaf({ variant, reducedMotion }: OliveGlassLeafProps) {
 
           {/* Internal glass bevels and animated caustic clipped to exact leaf */}
           <g clipPath={`url(#${clipId})`}>
-            <path d="M 10 14 L 128 14 L 128 20 L 16 86 L 10 86 Z" fill={`url(#${upperGlassId})`} />
-            <path d="M 16 86 L 128 20 L 128 88 L 16 88 Z" fill={`url(#${lowerDepthId})`} />
+            <path
+              d="M 10 14 L 128 14 L 128 20 L 16 86 L 10 86 Z"
+              fill={`url(#${upperGlassId})`}
+            />
+            <path
+              d="M 16 86 L 128 20 L 128 88 L 16 88 Z"
+              fill={`url(#${lowerDepthId})`}
+            />
 
             <g transform="rotate(24 70 50)">
               {isOpening && !reducedMotion ? (
@@ -275,16 +275,16 @@ export function LeafLoader({ label, overlay = false }: LeafLoaderProps) {
 
   return (
     <div
-      className={overlay ? "ef-leaf-loader ef-leaf-loader--overlay" : "ef-leaf-loader"}
+      className={
+        overlay ? "ef-leaf-loader ef-leaf-loader--overlay" : "ef-leaf-loader"
+      }
       role="status"
       aria-live="polite"
       aria-busy="true"
       aria-label={trimmedLabel ? undefined : "Loading"}
     >
       <OliveGlassLeaf variant="loader" reducedMotion={prefersReducedMotion} />
-      {trimmedLabel ? (
-        <span className="ef-leaf-loader__label">{trimmedLabel}</span>
-      ) : null}
+      {trimmedLabel ? <span className="sr-only">{trimmedLabel}</span> : null}
     </div>
   );
 }
@@ -358,7 +358,10 @@ export function OpeningSequence() {
             animate={{ opacity: 1, scale: 1 }}
             exit={
               prefersReducedMotion
-                ? { opacity: 0, transition: { duration: 0.18, ease: "easeOut" } }
+                ? {
+                    opacity: 0,
+                    transition: { duration: 0.18, ease: "easeOut" },
+                  }
                 : {
                     opacity: 0,
                     scale: 1.05,

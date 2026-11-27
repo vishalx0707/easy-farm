@@ -59,5 +59,14 @@
   color: #c1cdb1;
 }
 .auth-story:has(.auth-reel) .auth-story-copy > p:not(.eyebrow) {
-  color: #d2dcc2;
+  color: #fff;
+}
+.auth-layout.light-ui,
+.auth-layout .auth-card {
+  background: #fff;
+}
+.auth-story:has(.auth-reel) .auth-story-copy h1,
+.auth-story:has(.auth-reel) .auth-story-copy .eyebrow,
+.auth-story:has(.auth-reel) > .brand {
+  color: #fff;
 }

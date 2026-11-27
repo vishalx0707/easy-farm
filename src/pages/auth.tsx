@@ -121,7 +121,7 @@ export function Login() {
           </h1>
           <p>A place for growers and businesses to trade on their own terms.</p>
         </div>
-        <small>From your field. To their table. · Illustrative footage</small>
+        <small>Illustrative footage</small>
       </aside>
       <main className="auth-card">
         <div className="mobile-brand">
@@ -129,7 +129,6 @@ export function Login() {
         </div>
         <Animate identity="login">
           <div className="auth-content">
-            <p className="eyebrow">YOUR EASYFARM ACCOUNT</p>
             <h2>Welcome to EasyFarm.</h2>
             <p className="auth-intro">
               Sign in to connect with growers and businesses.
@@ -158,7 +157,7 @@ export function Login() {
                   <GoogleIcon />
                   {busy ? "Connecting to Google…" : "Continue with Google"}
                 </Button>
-                <p className="auth-status" role="status">
+                <p className="sr-only" role="status">
                   {!isLoaded
                     ? "Connecting to secure sign-in…"
                     : isSignedIn
@@ -174,24 +173,10 @@ export function Login() {
                 <button onClick={() => location.reload()}>Try again</button>
               </p>
             )}
-            <div className="auth-next">
-              <span>
-                01 <i /> 02
-              </span>
-              <p>
-                New here? Choose your buyer or grower workspace on the next
-                step.
-              </p>
-            </div>
-            <p className="auth-footnote">
-              Already have an account? Your Google sign-in opens your existing
-              portal.
-            </p>
           </div>
         </Animate>
         <footer className="auth-footer">
           <a href="/">Back to EasyFarm</a>
-          <span>Good food starts with a connection.</span>
         </footer>
       </main>
     </div>
