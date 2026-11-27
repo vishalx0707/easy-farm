@@ -506,9 +506,9 @@ async function main() {
     change: (values, identity) =>
       serialize(async () => {
         const user = domain.portalUser(db, identity);
-        const id = domain.apply(db, values, user);
+        const result = domain.actionResult(db, values, user);
         await save();
-        return { id };
+        return result;
       }),
   };
 

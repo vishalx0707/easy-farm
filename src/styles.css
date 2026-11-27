@@ -4,6 +4,7 @@
 @import "./mobile.css";
 @import "./auth.css";
 @import "./refinement.css";
+@import "./shopping.css";
 @font-face {
   font-family: Montreal;
   src: url("/assets/Montreal-400.woff") format("woff");

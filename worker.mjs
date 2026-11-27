@@ -17,7 +17,7 @@ export class Marketplace extends DurableObject{
  user(identity){const db=this.read(),user=domain.portalUser(db,identity);if(user.role!=='pending')this.save(db);return user;}
  complete(identity,values){const db=this.read(),user=domain.completeProfile(db,identity,values);this.save(db);return {role:user.role};}
  state(identity){const db=this.read(),user=domain.portalUser(db,identity);if(domain.ensureFarm(db,user))this.save(db);return domain.visibleState(db,user);}
- change(values,identity){const db=this.read(),user=domain.portalUser(db,identity);const id=domain.apply(db,values,user);this.save(db);return {id};}
+ change(values,identity){const db=this.read(),user=domain.portalUser(db,identity);const result=domain.actionResult(db,values,user);this.save(db);return result;}
  async fetch(request){
   if(request.body){const reader=request.body.getReader();let size=0;const chunks=[];
    while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>16000){await reader.cancel();return Response.json({error:'Request is too large.'},{status:413});}chunks.push(value);}

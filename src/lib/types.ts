@@ -31,6 +31,23 @@ export interface Lot {
   quality: string;
   open: boolean;
   sample?: boolean;
+  directOrder?: boolean;
+}
+export interface CheckoutItem {
+  listing: string;
+  quantity: number;
+  price: number;
+  pickup: string;
+  direct: boolean;
+}
+export interface CheckoutRequest {
+  checkoutId: string;
+  items: CheckoutItem[];
+}
+export interface CheckoutResult {
+  id: string;
+  orders: string[];
+  offers: string[];
 }
 export interface Message {
   by: Role;

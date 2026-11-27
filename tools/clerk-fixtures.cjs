@@ -12,7 +12,7 @@ module.exports=async function start(options={}){
  const calls={profiles:0,sessions:0};
  const people=new Map(),sessions=new Map();let db=structuredClone(domain.seed);db.profiles=[];
  const auth=createAuth(config,{authenticateRequest:async(request,options)=>sdk.authenticateRequest(request,{...options,jwtKey:config.CLERK_JWT_KEY}),users:{getUser:async id=>{calls.profiles++;return people.get(id);}},sessions:{getSession:async id=>{calls.sessions++;return sessions.get(id);}}});
- const store={read:()=>db,user:identity=>domain.portalUser(db,identity),complete:(identity,values)=>({role:domain.completeProfile(db,identity,values).role}),state:identity=>{const user=domain.portalUser(db,identity);domain.ensureFarm(db,user);return domain.visibleState(db,user);},change:(values,identity)=>({id:domain.apply(db,values,domain.portalUser(db,identity))})};
+ const store={read:()=>db,user:identity=>domain.portalUser(db,identity),complete:(identity,values)=>({role:domain.completeProfile(db,identity,values).role}),state:identity=>{const user=domain.portalUser(db,identity);domain.ensureFarm(db,user);return domain.visibleState(db,user);},change:(values,identity)=>domain.actionResult(db,values,domain.portalUser(db,identity))};
  const server=require('../server.js').createAppServer(async(req,res)=>{
   let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>16000){res.writeHead(413).end();return;}}
   const request=new Request(base+req.url,{method:req.method,headers:req.headers,...(!['GET','HEAD'].includes(req.method)?{body:raw}:{})});

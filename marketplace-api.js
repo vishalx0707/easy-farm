@@ -29,7 +29,7 @@ const store={
  user:identity=>serialize(async()=>{const db=await read();const user=domain.portalUser(db,identity);if(user.role!=='pending')await save(db);return user;}),
  complete:(identity,values)=>serialize(async()=>{const db=await read();const user=domain.completeProfile(db,identity,values);await save(db);return {role:user.role};}),
  state:identity=>serialize(async()=>{const db=await read(),user=domain.portalUser(db,identity);if(domain.ensureFarm(db,user))await save(db);return domain.visibleState(db,user);}),
- change:(values,identity)=>serialize(async()=>{const db=await read(),user=domain.portalUser(db,identity);const id=domain.apply(db,values,user);await save(db);return {id};})
+ change:(values,identity)=>serialize(async()=>{const db=await read(),user=domain.portalUser(db,identity);const result=domain.actionResult(db,values,user);await save(db);return result;})
 };
 let authPromise;
 module.exports=async function api(request,response){

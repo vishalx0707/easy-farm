@@ -56,6 +56,9 @@ export function TradeEditor({
   onSave: (action: Action) => Promise<void>;
 }) {
   const [error, setError] = useState("");
+  const [directOrder, setDirectOrder] = useState(
+    edit.kind === "listing" && edit.lot?.directOrder === true,
+  );
   let initial: Record<string, string> = {};
   if (edit.kind === "listing")
     initial = {
@@ -135,7 +138,7 @@ export function TradeEditor({
     try {
       const identity =
         edit.kind === "listing"
-          ? { farm: edit.farm.id, id: edit.lot?.id }
+          ? { farm: edit.farm.id, id: edit.lot?.id, directOrder }
           : edit.kind === "farm"
             ? { id: edit.farm?.id }
             : edit.kind === "offer"
@@ -184,6 +187,21 @@ export function TradeEditor({
                 {field("harvest", "Harvest date", "date")}
                 {field("pickup", "Pickup window")}
                 {field("notes", "Notes", "textarea", true)}
+                <label className="field-wide checkout-choice">
+                  <input
+                    type="checkbox"
+                    checked={directOrder}
+                    onChange={(event) => setDirectOrder(event.target.checked)}
+                  />
+                  <span>
+                    <strong>Allow checkout at this price</strong>
+                    <small>
+                      Buyers can place an order immediately at your listed price
+                      and pickup time. Leave off to review requests before
+                      accepting them.
+                    </small>
+                  </span>
+                </label>
               </>
             ) : edit.kind === "farm" ? (
               <>

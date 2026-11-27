@@ -36,12 +36,83 @@ function record(db, order, event, details) {
   db.history.push(entry);
   order.timeline.push({ event, at: entry.at });
 }
+function buyerOffer(user, listing, quantity, price, pickup) {
+  return {
+    id: id("offer"), buyer: user.id, buyerName: user.organization || user.name,
+    buyerPerson: user.name, listing: listing.id, farm: listing.farm, crop: listing.crop,
+    quantity, price, pickup, status: "Pending", by: "buyer", messages: [], created: now(),
+  };
+}
+
+function confirmOrder(db, offer, listing) {
+  listing.quantity = Number((listing.quantity - offer.quantity).toPrecision(15));
+  if (!listing.quantity) listing.open = false;
+  offer.status = "Accepted";
+  const order = {
+    id: id("EF"), buyer: offer.buyer, buyerName: offer.buyerName, buyerPerson: offer.buyerPerson,
+    listing: listing.id, offer: offer.id, farm: offer.farm, crop: offer.crop,
+    quantity: offer.quantity, price: offer.price, total: Math.round(offer.price * offer.quantity * 100) / 100,
+    pickup: offer.pickup, grade: listing.grade, harvest: listing.harvest, quality: listing.quality,
+    status: "Accepted", payment: "Unpaid", timeline: [],
+  };
+  db.orders.push(order);
+  record(db, order, "Accepted", { crop: order.crop, quantity: order.quantity, price: order.price, pickup: order.pickup });
+  return order.id;
+}
+
+function checkout(db, data, user) {
+  requireThat(user.role === "buyer", "Open the buyer portal to check out.");
+  const key = data.checkoutId;
+  requireThat(typeof key === "string" && /^[a-f0-9-]{36}$/i.test(key), "Refresh your cart and try again.");
+  const items = data.items;
+  requireThat(Array.isArray(items) && items.length > 0 && items.length <= 30, "Add between 1 and 30 items to check out.");
+  const signature = JSON.stringify(items.map((item) => [item?.listing, item?.quantity, item?.price, item?.pickup, item?.direct]));
+  const previous = db.checkouts?.find((entry) => entry.buyer === user.id && entry.key === key);
+  if (previous) {
+    requireThat(previous.signature === signature, "This checkout was already submitted. Open Orders or Offers to review it.");
+    return previous.result;
+  }
+
+  const seen = new Set();
+  const lines = items.map((item) => {
+    requireThat(item && typeof item.listing === "string" && !seen.has(item.listing), "Each listing can appear once in the cart.");
+    seen.add(item.listing);
+    const listing = find(db.listings, item.listing, "Listing");
+    requireThat(find(db.farms, listing.farm, "Farm").owner, "Sample listings cannot be ordered.");
+    const quantity = amount(item.quantity, "quantity");
+    requireThat(listing.open && quantity <= listing.quantity, `${listing.crop}: only ${listing.quantity} kg available. Update your cart.`);
+    const direct = listing.directOrder === true;
+    requireThat(item.price === listing.price && item.pickup === listing.pickup && item.direct === direct,
+      `${listing.crop}: the terms changed. Review your cart and submit again.`);
+    return { listing, quantity, direct };
+  });
+
+  const result = { id: key, orders: [], offers: [] };
+  for (const { listing, quantity, direct } of lines) {
+    const offer = buyerOffer(user, listing, quantity, listing.price, listing.pickup);
+    db.offers.push(offer);
+    if (direct) result.orders.push(confirmOrder(db, offer, listing));
+    else result.offers.push(offer.id);
+  }
+  (db.checkouts ||= []).push({ buyer: user.id, key, signature, result });
+  return result;
+}
+
 function apply(db, data, user) {
   requireThat(user?.id, "Sign in to continue.");
   const { action } = data;
   const role = user.role;
   requireThat(role === "grower" || role === "buyer", "Choose a workspace role.");
   const grower = role === "grower";
+
+  if (action === "checkout") return checkout(db, data, user);
+  if (action === "location") {
+    const location = text(data.location, "city or region");
+    requireThat(location.length <= 100, "Use a maximum of 100 characters for your city or region.");
+    const profile = find(db.profiles, user.id, "Profile");
+    profile.location = location;
+    return profile.id;
+  }
 
   if (action === "farm") {
     requireThat(grower, "Open the grower workspace to edit a farm.");
@@ -60,6 +131,7 @@ function apply(db, data, user) {
     if (data.id) requireThat(listing.farm === data.farm, "Select the farm that owns this listing.");
     requireThat(listing.farm === farm.id, "Select this listing’s farm.");
     Object.assign(listing, { crop: text(data.crop, "crop name"), category: text(data.category, "category"), quantity: amount(data.quantity, "quantity"), price: amount(data.price, "price"), grade: text(data.grade, "grade"), pickup: text(data.pickup, "pickup window"), harvest: text(data.harvest, "harvest date", true), notes: text(data.notes, "notes", true), open: true, quality: "Grower declared" });
+    if (typeof data.directOrder === "boolean") listing.directOrder = data.directOrder;
     if (!data.id) db.listings.push(listing);
     return listing.id;
   }
@@ -92,7 +164,7 @@ function apply(db, data, user) {
     requireThat(find(db.farms,listing.farm,"Farm").owner, "This is an illustrative lot. Choose a listing published by a grower.");
     const quantity = amount(data.quantity, "quantity");
     requireThat(listing.open && quantity <= listing.quantity, "That quantity is no longer available.");
-    const offer = { id: id("offer"), buyer: user.id, buyerName: user.organization || user.name, buyerPerson: user.name, listing: listing.id, farm: listing.farm, crop: listing.crop, quantity, price: amount(data.price, "price"), pickup: text(data.pickup, "pickup window"), status: "Pending", by: "buyer", messages: [], created: now() };
+    const offer = buyerOffer(user, listing, quantity, amount(data.price, "price"), text(data.pickup, "pickup window"));
     const message = text(data.message, "message", true);
     if (message) offer.messages.push({ by: role, body: message, at: now() });
     db.offers.push(offer);
@@ -123,13 +195,7 @@ function apply(db, data, user) {
   requireThat(action === "accept", "Unknown action.");
   const listing = find(db.listings, offer.listing, "Listing");
   requireThat(listing.open && offer.quantity <= listing.quantity, "The requested quantity is no longer available.");
-  listing.quantity -= offer.quantity;
-  if (!listing.quantity) listing.open = false;
-  offer.status = "Accepted";
-  const order = { id: id("EF"), buyer: offer.buyer, buyerName: offer.buyerName, buyerPerson: offer.buyerPerson, listing: listing.id, offer: offer.id, farm: offer.farm, crop: offer.crop, quantity: offer.quantity, price: offer.price, total: Math.round(offer.price * offer.quantity * 100) / 100, pickup: offer.pickup, grade: listing.grade, harvest: listing.harvest, quality: listing.quality, status: "Accepted", payment: "Unpaid", timeline: [] };
-  db.orders.push(order);
-  record(db, order, "Accepted", { crop: order.crop, quantity: order.quantity, price: order.price, pickup: order.pickup });
-  return order.id;
+  return confirmOrder(db, offer, listing);
 }
 
 function ensureFarm(db,user){
@@ -172,4 +238,8 @@ function completeProfile(db,identity,values){
   const profile={...user,role:values.role,organization,location,googleSubject:identity.googleSubject};
   db.profiles.push(profile);ensureFarm(db,profile);return profile;
 }
-module.exports={seed,apply,ensureFarm,visibleState,traceState,portalUser,completeProfile};
+function actionResult(db, values, user) {
+  const result = apply(db, values, user);
+  return typeof result === "string" ? { id: result } : result;
+}
+module.exports={seed,apply,actionResult,ensureFarm,visibleState,traceState,portalUser,completeProfile};

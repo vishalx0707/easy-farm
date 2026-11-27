@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { money, photo, steps, time } from "@/lib/utils";
 import type { Action, Lot, Offer, Order, State, Farm, Role } from "@/lib/types";
 import type { Edit } from "./trade-editor";
+import { AddToCart, orderable } from "./buyer-cart";
 export type Go = (view: string, type?: string, id?: string) => void;
 export type Change = (action: Action) => Promise<{ id: string }>;
 export function Facts({ values }: { values: [string, React.ReactNode][] }) {
@@ -108,6 +109,8 @@ export function LotDetails({
   edit,
   change,
   pending,
+  addToCart,
+  cartQuantity,
 }: {
   lot: Lot;
   data: State;
@@ -116,6 +119,8 @@ export function LotDetails({
   edit: (e: Edit) => void;
   change: Change;
   pending: boolean;
+  addToCart: (lot: Lot, quantity: number) => void;
+  cartQuantity?: number;
 }) {
   const farm = data.farms.find((f) => f.id === lot.farm)!;
   const owned = role === "grower" && farm.owned;
@@ -155,19 +160,29 @@ export function LotDetails({
         {lot.notes && <p className="notes">{lot.notes}</p>}
         {lot.sample && (
           <p className="simulation-note">
-            Sample lot · no seller account receives requests for this example.
-            Choose a grower-published lot to trade.
+            Sample listing · ordering unavailable.
           </p>
         )}
-        {role === "buyer" && !lot.sample && (
+        {role === "buyer" && orderable(lot) && (
           <p className="trade-recipient">
-            <MessageCircle size={14} /> Your offer goes to {farm.person} at{" "}
-            {farm.name}. An order is created when terms are accepted.
+            <MessageCircle size={14} />{" "}
+            {lot.directOrder
+              ? `Order at the listed price from ${farm.name}.`
+              : `${farm.name} confirms your request before it becomes an order.`}
           </p>
+        )}
+        {role === "buyer" && orderable(lot) && (
+          <AddToCart
+            key={cartQuantity ?? ""}
+            lot={lot}
+            saved={cartQuantity}
+            onAdd={addToCart}
+          />
         )}
         <div className="actions">
           {role === "buyer" && !lot.sample && lot.open && lot.quantity > 0 && (
             <Button
+              variant="outline"
               data-action="new-offer"
               onClick={() => edit({ kind: "offer", lot })}
             >
