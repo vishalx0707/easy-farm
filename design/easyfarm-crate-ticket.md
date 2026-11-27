@@ -48,3 +48,18 @@ Frame studies in Downloads include Wabi at 0:41.20–0:42.45 for type behind a d
 Additional footage. [Greenhouse harvest by Anna Tarazevich](https://www.pexels.com/video/a-woman-picking-up-tomatoes-7332174/) · [Packing line by Amar Preciado](https://www.pexels.com/video/close-up-video-of-fresh-harvested-tomatoes-8675105/) · [Field harvest by Zen Chung](https://www.pexels.com/video/women-comparing-their-harvested-tomatoes-5527771/)
 
 Music. [Symmetry](https://www.youtube.com/watch?v=fYEAjlgNvm8) · [The Guiding Light](https://www.epidemicsound.com/music/tracks/1da4a046-eb4a-4402-b83c-5dba46b982ca/)
+
+## Blended cut
+
+The earlier edit left 5.62 seconds between the end of “record” and the start of “EasyFarm.” The revised edit redistributes 4.77 seconds across existing speech pauses, including the listing fields, market prices, direct message, acceptance and pickup. No words were added or rerecorded. The final pause is 0.85 seconds, with the leaf beginning at 1:05.58 and the tagline still landing at 1:08.24. The runtime remains 1:11.
+
+Titles sit over the produce or grower footage with a soft ivory veil, or on warm paper and sage in the app sequence. Typographic pushes settle over roughly a second. Short dissolves connect the live-action beats and visual changes, and the original page-turn transition keeps a separate refracted edge.
+
+| Time | Picture and sound |
+| --- | --- |
+| 0:22.86 | The grower footage remains visible beneath the paper turn into the listing. |
+| 0:23.09 | The kit’s page turn lands during the Symmetry to The Guiding Light crossfade. |
+| 0:27.92–0:32.32 | The camera has more time to pass quantity, asking price and pickup before publishing. |
+| 0:40.75–0:43.01 | The action panel opens into the accepted order over a sage field. |
+| 1:03.92–1:05.58 | The shared records blend straight into the ivory end card. |
+| 1:06.20 | The spoken EasyFarm cues the leaf slide and wordmark reveal. |
