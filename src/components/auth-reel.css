@@ -1,0 +1,63 @@
+.auth-story > .auth-reel {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: #253723;
+}
+.auth-reel > img,
+.auth-reel > video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 62% center;
+}
+.auth-reel > video:nth-of-type(2) {
+  object-position: 65% center;
+}
+.auth-reel > .auth-reel-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: linear-gradient(
+    180deg,
+    #12261966 0%,
+    #172b1b30 25%,
+    #122819a3 57%,
+    #0d2218ed 100%
+  );
+}
+.auth-story:has(.auth-reel):before {
+  opacity: 0;
+}
+.auth-story > .auth-reel-toggle {
+  position: absolute;
+  top: 34px;
+  right: 34px;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid #edf0cc40;
+  background: #233c2680;
+  color: #f3f1df;
+  backdrop-filter: blur(16px);
+}
+.auth-reel-toggle:hover {
+  background: #324d32b0;
+}
+.auth-reel-toggle:focus-visible {
+  outline: 2px solid #d5ef98;
+  outline-offset: 4px;
+}
+.auth-story:has(.auth-reel) > small {
+  color: #c1cdb1;
+}
+.auth-story:has(.auth-reel) .auth-story-copy > p:not(.eyebrow) {
+  color: #d2dcc2;
+}

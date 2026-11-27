@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect } from "react";
 import {
   useAuth,
   useClerk,
@@ -18,9 +18,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Brand } from "@/components/brand";
 import { Animate } from "@/components/motion";
+import { AuthReel } from "@/components/auth-reel";
 import { useApi } from "@/lib/api";
 import type { User, Role } from "@/lib/types";
-const SeedScene = lazy(() => import("@/components/seed-scene"));
 export function useSession() {
   const auth = useAuth(),
     api = useApi();
@@ -65,12 +65,6 @@ export function Login() {
   useEffect(() => {
     document.title = "Sign in · EasyFarm";
   }, []);
-  const [showScene, setShowScene] = useState(false);
-  useEffect(() => {
-    if (!isLoaded) return;
-    const timer = setTimeout(() => setShowScene(true), 4000);
-    return () => clearTimeout(timer);
-  }, [isLoaded]);
   if (params.has("callback"))
     return (
       <div className="auth-screen">
@@ -117,13 +111,7 @@ export function Login() {
     <div className="auth-layout light-ui">
       <aside className="auth-story">
         <Brand />
-        {showScene &&
-          !matchMedia("(max-width:760px), (prefers-reduced-motion:reduce)")
-            .matches && (
-            <Suspense fallback={null}>
-              <SeedScene />
-            </Suspense>
-          )}
+        <AuthReel />
         <div className="auth-story-copy">
           <p className="eyebrow">GROWN WITH CARE. TRADED DIRECT.</p>
           <h1>
@@ -133,7 +121,7 @@ export function Login() {
           </h1>
           <p>A place for growers and businesses to trade on their own terms.</p>
         </div>
-        <small>From your field. To their table.</small>
+        <small>From your field. To their table. · Illustrative footage</small>
       </aside>
       <main className="auth-card">
         <div className="mobile-brand">
