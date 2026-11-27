@@ -34,7 +34,7 @@ ClerkProvider from @clerk/react, with the bundled @clerk/ui components, handles 
 
 The clean full-screen `/login` page contains only Google sign-in. After Google returns, new users go to a separate full-page `/onboarding` route to choose their buyer/grower role and enter their farm/business name and location. That role is assigned once in the marketplace database. Returning accounts open their assigned portal even when entering through the other portal's login screen. `/buyer` and `/grower` share inventory while private offers, conversations, orders and history remain scoped to their participants.
 
-The development instance uses Clerk's shared Google development credentials. A production release requires a Clerk production instance, an owned domain and production Google OAuth configuration in Clerk. No production auth instance or hosted release has been configured. Clerk's Google redirect opens successfully; completion with a real Google account is a separate manual check and is not established by the fixture tests below.
+The development instance uses Clerk's shared Google development credentials. A production release requires a Clerk production instance, an owned domain and production Google OAuth configuration in Clerk. A hosted demo is available at https://easy-farm-seven.vercel.app using this development instance. Production Clerk authentication has not been provisioned. Google redirect is checked on the hosted origin; account completion remains a manual check.
 
 ## Vercel & Cloudflare Hosting
 
@@ -55,8 +55,8 @@ See [VERCEL.md](VERCEL.md) for the GitHub import settings and [.env.vercel.examp
 - `npm run build` — compiles React into `dist/` and copies public marketing/media assets.
 - `npm run dev:cloudflare` — runs the local Worker at [127.0.0.1:8787](http://127.0.0.1:8787/login) with persistent local storage in `.wrangler/local`.
 - `npm run check:cloudflare` — validates Cloudflare Worker packaging (`wrangler deploy --dry-run`) without deploying.
-- `npm run deploy` — explicit Cloudflare Worker deployment command (not run).
-- `vercel build` / `vercel deploy` — Vercel local build / remote deployment commands after `vercel login` and `vercel link` (not run).
+- `npm run deploy` — explicit Cloudflare Worker deployment command; deployed Worker secrets must be maintained separately.
+- `vercel build` / `vercel deploy` — Vercel local build / remote deployment commands for the linked project.
 
 ### Required Environment Variables & Provisioning
 
@@ -77,7 +77,7 @@ Local `.dev.vars` files are never uploaded automatically. Before an authorized p
 ### Readiness Limitations & Vercel Plan Constraints
 
 - **Commercial B2B launch requires Vercel Pro (or Enterprise)**: Vercel's free Hobby plan is restricted to personal, non-commercial use under Vercel's Terms of Service and Fair Use Guidelines.
-- **Unlinked local Vercel CLI**: `vercel login` / `vercel link` has not been run in this environment, so `vercel build` could not connect to a Vercel project locally; the Vercel adapter, routing, headers, and Worker integration are verified via `npm run test:vercel` instead.
+- **Hosted demo**: the local CLI is linked to the `easy-farm` project in `vishalx0707s-projects`, with Node 24 and the Other framework preset. The Vercel production target serves the public demo; Clerk still uses its development instance. See VERCEL.md for the current release and authentication status.
 - **Runtime & scaling constraints**: `vercel.json` sets `maxDuration: 30` (within Hobby's 300s cap), and `api/_proxy.mjs` enforces a 16 KB API payload cap (well under Vercel's 4.5 MB limit). The backend currently coordinates marketplace state in a single SQLite-backed Durable Object (`easyfarm-demo`); multi-region or high-volume commercial traffic would require sharding or a dedicated external database.
 - **Non-production product placeholders**: Payments remain explicitly simulated, quality checks are grower-declared/simulated, market charts use illustrative values, and live Google OAuth login on the hosted domain requires manual verification after provisioning production Clerk/Google credentials. First Worker deployment initializes a separate seeded marketplace; it does not upload the private Node `.easyfarm/market.json` database. No Netlify configuration is included.
 

@@ -1,5 +1,15 @@
 # Vercel setup
 
+## Current hosted demo
+
+- App: https://easy-farm-seven.vercel.app
+- Vercel project: `vishalx0707s-projects/easy-farm`, connected to `vishalx0707/easy-farm`.
+- Backend: `easyfarm` Worker on Cloudflare, using its SQLite Durable Object; direct API access without the proxy secret is blocked.
+- Authentication: the existing Google-only Clerk **development** instance. Email/password are disabled. The optional Vercel Marketplace Clerk integration is not installed or required by this implementation.
+- Production-target Vercel build completed successfully on 27 November 2026. This is a hosted demo, not a provisioned Clerk production instance or payment/inspection integration.
+- Hosted verification: public pages and auth configuration respond, private state rejects unauthenticated access, cross-origin writes are blocked, the Google button redirects to accounts.google.com, and Montreal loads at 1440/390/360 px without horizontal overflow. No Google credentials were entered by automation and no test trades were inserted into the hosted database. Full trade/persistence checks use isolated local fixtures.
+- Runtime secrets are set on Vercel and Cloudflare. They remain outside Git. Local Node trade data was not uploaded. Preview environments require separate backend/environment configuration as described below.
+
 Import `vishalx0707/easy-farm` from GitHub, using the repository root. Choose **Other** as the framework preset. `vercel.json` supplies the settings:
 
 | Setting | Value |
