@@ -4,7 +4,7 @@ import type { State, Role, Farm } from "@/lib/types";
 import type { Edit } from "./trade-editor";
 import type { Go } from "./trade-details";
 import { MarketPrices } from "./market-prices";
-import { money, photo } from "@/lib/utils";
+import { money, photo, photoCredit } from "@/lib/utils";
 
 export function MarketHome({
   data,
@@ -121,15 +121,8 @@ export function MarketHome({
           </Button>
         </div>
         <div className="feature-image">
-          <img
-            src={photo(featured?.category || "Tomatoes")}
-            alt="Representative produce"
-          />
-          <span>
-            {!featured || featured.category === "Tomatoes"
-              ? "Generated produce image"
-              : "Representative imagery"}
-          </span>
+          <img src={photo(featured?.crop)} alt="Representative produce" />
+          <span>{photoCredit(featured?.crop)}</span>
         </div>
       </article>
 
@@ -150,7 +143,7 @@ export function MarketHome({
                   go(grower ? "listings" : "catalogue", "lot", l.id)
                 }
               >
-                <img src={photo(l.category)} alt="" />
+                <img src={photo(l.crop)} alt="" />
                 <span>
                   <strong>{l.crop}</strong>
                   <small>

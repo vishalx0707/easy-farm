@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Minus, Plus, ShoppingCart } from "lucide-react";
 import { ApiError } from "@/lib/api";
-import { money, photo } from "@/lib/utils";
+import { money, photo, photoCredit } from "@/lib/utils";
 import type {
   CheckoutItem,
   CheckoutRequest,
@@ -179,9 +179,9 @@ export function ShopCard({
   return (
     <article className="lot-card shop-card">
       <div className="lot-image">
-        <img src={photo(lot.category)} alt="" loading="lazy" />
+        <img src={photo(lot.crop)} alt="" loading="lazy" />
         {lot.sample && <span>Sample · browse only</span>}
-        {lot.category === "Tomatoes" && (
+        {photoCredit(lot.crop).startsWith("Generated") && (
           <small className="photo-credit">Generated image</small>
         )}
       </div>

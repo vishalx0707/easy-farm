@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { money, photo, steps, time } from "@/lib/utils";
+import { money, photo, photoCredit, steps, time } from "@/lib/utils";
 import type { Action, Lot, Offer, Order, State, Farm, Role } from "@/lib/types";
 import type { Edit } from "./trade-editor";
 import { AddToCart, orderable } from "./buyer-cart";
@@ -61,8 +61,8 @@ export function LotCard({ lot, farm, go }: { lot: Lot; farm?: Farm; go: Go }) {
         aria-label={"View " + lot.crop}
         onClick={() => go(view, "lot", lot.id)}
       >
-        <img src={photo(lot.category)} alt={lot.crop} loading="lazy" />
-        {lot.category === "Tomatoes" && (
+        <img src={photo(lot.crop)} alt={lot.crop} loading="lazy" />
+        {photoCredit(lot.crop).startsWith("Generated") && (
           <small className="photo-credit">Generated image</small>
         )}
         <span>
@@ -127,12 +127,8 @@ export function LotDetails({
   return (
     <div className="detail-layout">
       <div className="detail-visual">
-        <img src={photo(lot.category)} alt={lot.crop} />
-        <p>
-          {lot.category === "Tomatoes"
-            ? "AI-generated representative produce image"
-            : "Representative produce photography"}
-        </p>
+        <img src={photo(lot.crop)} alt={lot.crop} />
+        <p>{photoCredit(lot.crop)}</p>
       </div>
       <section className="glass panel">
         <p className="eyebrow">CROP LOT · {lot.category}</p>
